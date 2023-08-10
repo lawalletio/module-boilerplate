@@ -17,6 +17,7 @@
     "node": "./dist/index.mjs"
   },
   "scripts": {
+    "test": "jest --coverage",
     "dev": "tsup src/index.ts --format esm --watch --onSuccess \"node dist/index.mjs\"",
     "build": "tsc",
     "start": "node dist/index.mjs"
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.3",
     "@types/node": "^20.4.9",
     "@typescript-eslint/eslint-plugin": "^6.3.0",
     "@typescript-eslint/parser": "^6.3.0",
@@ -42,6 +44,8 @@
     "eslint-config-airbnb-typescript": "^17.1.0",
     "eslint-import-resolver-typescript": "^3.6.0",
     "eslint-plugin-import": "^2.28.0",
+    "jest": "^29.6.2",
+    "ts-jest": "^29.1.1",
     "tsup": "^7.2.0",
     "typescript": "^5.1.6"
   }
