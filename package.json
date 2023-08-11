@@ -18,6 +18,7 @@
   },
   "scripts": {
     "test": "jest --coverage",
+    "test:watch": "jest --watch",
     "dev": "tsup src/index.ts --format esm --watch --onSuccess \"node dist/index.mjs\"",
     "build": "tsc",
     "start": "node dist/index.mjs",
