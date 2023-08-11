@@ -1,3 +1,3 @@
 export interface MessageResponseContract {
-  message: string
+  message: string;
 }

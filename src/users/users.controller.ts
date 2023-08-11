@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { UsersService } from './users.service';
+import { Request, Response } from "express";
+import { UsersService } from "./users.service";
 
 export class UsersController {
   constructor(
@@ -7,28 +7,32 @@ export class UsersController {
   ) {}
 
   index(req: Request, res: Response) {
-    return res.json({ message: 'User List' });
+    return res.json({ message: "User List" });
   }
 
   store(req: Request, res: Response) {
     return res.json(
       this.usersService.create({
-        name: 'John',
-        email: 'john@test.com',
-        password: '123',
+        name: "John",
+        email: "john@test.com",
+        password: "123",
       }),
     );
   }
 
   show(req: Request, res: Response) {
-    return res.json({ message: 'User show' });
+    return res.json({ message: "User show" });
+  }
+
+  list(req: Request, res: Response) {
+    return res.json({ message: "User list" });
   }
 
   update(req: Request, res: Response) {
-    return res.json({ message: 'User updated' });
+    return res.json({ message: "User updated" });
   }
 
   delete(req: Request, res: Response) {
-    return res.json({ message: 'User deleted' });
+    return res.json({ message: "User deleted" });
   }
 }
