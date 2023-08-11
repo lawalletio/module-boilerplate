@@ -1,5 +1,5 @@
 import request from "supertest";
-import app from "../src/app"; // adjust the import path accordingly
+import app from "../api"; // adjust the import path accordingly
 
 describe("User Route", () => {
   it("should return all users", async () => {
