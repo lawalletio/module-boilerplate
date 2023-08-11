@@ -4,4 +4,4 @@ dist/
 .vscode
 
 # testing
-coverage/
+.coverage/
