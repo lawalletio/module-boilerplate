@@ -20,7 +20,7 @@
     "build:watch": "swc src -w --out-dir dist",
     "start": "NODE_ENV=production node dist/index.js",
     "clean": "rm -rf dist",
-    "prettier": "prettier . --write"
+    "prettier": "prettier src __tests__ --write"
   },
   "keywords": [],
   "author": "Agustin Kassis",
