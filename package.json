@@ -20,6 +20,7 @@
     "build:watch": "swc src -w --out-dir dist",
     "start": "NODE_ENV=production node dist/index.js",
     "clean": "rm -rf dist",
+    "lint": "eslint src __tests__ --fix",
     "prettier": "prettier src __tests__ --write"
   },
   "keywords": [],
