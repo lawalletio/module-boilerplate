@@ -1,8 +1,6 @@
 import { Router } from "express";
 import { globSync } from "glob";
 
-import path from "path";
-
 type RouteMethod = "get" | "post" | "put" | "patch" | "delete";
 
 export const generateRoutes = (relativePath: string): Router => {
@@ -16,7 +14,9 @@ export const generateRoutes = (relativePath: string): Router => {
     nodir: true,
   }).forEach(async (value) => {
     const filePath = value.relative();
-    const matches = filePath.match(/^(?<route>.*)\/(?<method>get|post|put|patch|delete)\.js/i);
+    const matches = filePath.match(
+      /^(?<route>.*)\/(?<method>get|post|put|patch|delete)\.js/i,
+    );
 
     if (matches?.groups) {
       const method: RouteMethod = matches.groups.method as RouteMethod;
