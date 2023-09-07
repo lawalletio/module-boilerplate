@@ -18,8 +18,12 @@
     "moduleResolution": "Node",
     "skipLibCheck": true,
     "paths": {
+      "@constants/*": ["./src/constants/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@nostr/*": ["./src/nostr/*"],
       "@rest/*": ["./src/rest/*"],
-      "@nostr/*": ["./src/nostr/*"]
+      "@services/*": ["./src/services/*"],
+      "@types/*": ["./src/types/*"]
     }
   },
   "include": ["src/**/*"],
