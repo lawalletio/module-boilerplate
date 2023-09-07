@@ -9,10 +9,12 @@ import { generateRoutes } from './lib/utils';
 import path from 'path';
 import { ExtendedRequest } from './types/request';
 
+// Instantiate prisma client
 const prisma = new PrismaClient({
   log: [{ level: 'query', emit: 'event' }],
 });
 
+// Instantiate expresss
 const app = express();
 
 // Header Middleware
