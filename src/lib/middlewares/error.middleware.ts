@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { ErrorResponseContract } from '../../types/responses';
+import { ErrorResponseContract } from '@type/responses';
 
 export function errorHandler(
   err: Error,

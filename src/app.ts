@@ -4,10 +4,10 @@ import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
-import * as middlewares from './lib/middlewares';
-import { setUpRoutes } from './lib/utils';
+import * as middlewares from '@lib/middlewares';
+import { setUpRoutes } from '@lib/utils';
 import path from 'path';
-import { ExtendedRequest } from './types/request';
+import { ExtendedRequest } from '@type/request';
 
 // Instantiate prisma client
 const prisma = new PrismaClient({

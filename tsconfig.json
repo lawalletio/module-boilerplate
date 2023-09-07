@@ -23,7 +23,7 @@
       "@nostr/*": ["./src/nostr/*"],
       "@rest/*": ["./src/rest/*"],
       "@services/*": ["./src/services/*"],
-      "@types/*": ["./src/types/*"]
+      "@type/*": ["src/type/*"]
     }
   },
   "include": ["src/**/*"],
