@@ -6,7 +6,7 @@ type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 export const generateRoutes = (relativePath: string): Router => {
   const router = Router();
 
-  globSync('*.js', {
+  globSync('*.{ts,js}', {
     withFileTypes: true,
     cwd: relativePath,
     matchBase: true,
@@ -15,7 +15,7 @@ export const generateRoutes = (relativePath: string): Router => {
   }).forEach(async (value) => {
     const filePath = value.relative();
     const matches = filePath.match(
-      /^(?<route>.*)\/(?<method>get|post|put|patch|delete)\.js/i,
+      /^(?<route>.*)\/(?<method>get|post|put|patch|delete)\.(?:ts|js)/i,
     );
 
     if (matches?.groups) {
