@@ -1,4 +1,4 @@
-# Express and Typescript Boilerplate
+# LaWallet Module boilerplate
 
 Most of the time, I used to `ts-node` and `nodemon` for my **Typescript** + **Express** development.
 But, web bundler were evolved especially the speed of compile time which reduces uncomfortable **Developer Experience**.
