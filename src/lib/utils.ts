@@ -15,32 +15,29 @@ export const generateRoutes = (relativePath: string): Router => {
       .basename(filePath, path.extname(filePath))
       .toLowerCase();
 
-    // if (!/([get|post|put|patch|delete]\.js)$/.test(file)) {
-    //   console.warn(
-    //     `Skipping ${file} as it doesn't correspond to a valid HTTP method.`,
-    //   );
-    // } else {
-    //   arrayOfFiles.push(path.join(dirPath, file));
-    // }
+    if (!/([get|post|put|patch|delete]\.js)$/.test(filePath)) {
+      console.warn(
+        `Skipping ${filePath} as it doesn't correspond to a valid HTTP method.`,
+      );
+    } else {
+      // Create a new Express route based on the filename
+      console.info("-----------");
 
-    // Create a new Express route based on the filename
+      console.info("filePath:");
+      console.info(filePath);
+      console.info("routeMethod:");
+      console.info(routeMethod);
+      console.info("-----------");
 
-    console.info("-----------");
+      router[routeMethod as RouteMethod](
+        filePath,
+        (await import(filePath)).default,
+      );
 
-    console.info("filePath:");
-    console.info(filePath);
-    console.info("routeMethod:");
-    console.info(routeMethod);
-    console.info("-----------");
-
-    router[routeMethod as RouteMethod](
-      filePath,
-      (await import(filePath)).default,
-    );
-
-    console.log(
-      `Created ${routeMethod.toUpperCase()} route for /directory/:param1/:param2`,
-    );
+      console.info(
+        `Created ${routeMethod.toUpperCase()} route for ${filePath}`,
+      );
+    }
   });
 
   return router;
