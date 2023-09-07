@@ -9,10 +9,12 @@ import { setUpRoutes } from './lib/utils';
 import path from 'path';
 import { ExtendedRequest } from './types/request';
 
+// Instantiate prisma client
 const prisma = new PrismaClient({
   log: [{ level: 'query', emit: 'event' }],
 });
 
+// Instantiate expresss
 const app = express();
 
 // Header Middleware
@@ -25,6 +27,7 @@ app.use(cors());
 const restDirectory = path.join(__dirname, 'rest');
 const routes = setUpRoutes(express.Router(), restDirectory);
 
+// Setup context
 routes.use((req, res, next) => {
   console.log('Time:', Date.now());
   (req as ExtendedRequest).context = {
@@ -35,8 +38,6 @@ routes.use((req, res, next) => {
 
 // Setup express routes
 app.use('/', routes);
-
-// Setup context
 
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
