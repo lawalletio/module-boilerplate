@@ -1,8 +1,6 @@
 import { Router } from "express";
 import { globSync } from "glob";
 
-import path from "path";
-
 type RouteMethod = "get" | "post" | "put" | "patch" | "delete";
 
 export const generateRoutes = (relativePath: string): Router => {
