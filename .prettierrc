@@ -4,5 +4,39 @@
   "singleQuote": true,
   "tabWidth": 2,
   "trailingComma": "all",
-  "parser": "typescript"
+  "overrides": [
+    {
+      "files": "*.ts",
+      "options": {
+        "parser": "typescript"
+      }
+    },
+    {
+      "files": "*.md",
+      "options": {
+        "parser": "markdown"
+      }
+    },
+    {
+      "files": "*.mdx",
+      "options": {
+        "parser": "mdx"
+      }
+    },
+    {
+      "files": "*.json",
+      "options": {
+        "parser": "json",
+        "singleQuote": false,
+        "tabWidth": 2,
+        "trailingComma": "none"
+      }
+    },
+    {
+      "files": "*.{yml,yaml}",
+      "options": {
+        "parser": "yaml"
+      }
+    }
+  ]
 }
