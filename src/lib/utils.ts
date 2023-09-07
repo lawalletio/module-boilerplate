@@ -3,9 +3,7 @@ import { globSync } from 'glob';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
-export const generateRoutes = (relativePath: string): Router => {
-  const router = Router();
-
+export const setUpRoutes = (router: Router, relativePath: string): Router => {
   globSync('*.{ts,js}', {
     withFileTypes: true,
     cwd: relativePath,

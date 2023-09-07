@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
 import * as middlewares from './lib/middlewares';
-import { generateRoutes } from './lib/utils';
+import { setUpRoutes } from './lib/utils';
 import path from 'path';
 import { ExtendedRequest } from './types/request';
 
@@ -23,7 +23,7 @@ app.use(cors());
 
 // Generate routes
 const restDirectory = path.join(__dirname, 'rest');
-const routes = generateRoutes(restDirectory);
+const routes = setUpRoutes(express.Router(), restDirectory);
 
 routes.use((req, res, next) => {
   console.log('Time:', Date.now());
