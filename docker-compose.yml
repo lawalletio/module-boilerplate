@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:12-bullseye
+    restart: always
+    environment:
+      DATABASE_HOST: localhost
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: wallet_provider
+    ports:
+      - 5432:5432
+
+  app:
+    build:
+      context: ./
+      target: runner
+    ports:
+      - 3000:3000
+    env_file:
+      - ./.env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "postgresql://root:root@postgres/lawallet-extension"
+    depends_on:
+      - postgres
