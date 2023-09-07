@@ -24,7 +24,7 @@ export const setUpRoutes = (router: Router, relativePath: string): Router => {
       console.info(`Created ${method.toUpperCase()} route for ${route}`);
     } else {
       console.warn(
-        `Skipping ${filePath} as it doesn't correspond to a valid HTTP method.`,
+        `Skipping ${filePath} as it doesn't comply to routes conventions.`,
       );
     }
   });
