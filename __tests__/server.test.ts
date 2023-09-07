@@ -1,9 +1,9 @@
 import request from "supertest";
-import app from "../api"; // adjust the import path accordingly
+import app from "../src/app";
 
-describe("User Route", () => {
-  it("should return all users", async () => {
-    const res = await request(app).get("/api/users");
+describe("Api request", () => {
+  it("should return status 200", async () => {
+    const res = await request(app).get("/folder/testparam1");
     expect(res.statusCode).toEqual(200);
   });
 });
