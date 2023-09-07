@@ -32,7 +32,3 @@ export const generateRoutes = (relativePath: string): Router => {
 
   return router;
 };
-
-export const getRestDirectory = (relativePath: string = "rest"): string => {
-  return path.join(__dirname, relativePath);
-};
