@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import 'dotenv/config';
-import express, { NextFunction, Response } from 'express';
+import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';

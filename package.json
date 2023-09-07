@@ -12,6 +12,7 @@
     "node": "./dist/index.mjs"
   },
   "scripts": {
+    "postinstall": "prisma generate",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "dev": "concurrently \"npm run build:watch\" \"npm run dev:watch\"",
@@ -20,8 +21,8 @@
     "build:watch": "swc src -w --out-dir dist",
     "start": "NODE_ENV=production node dist/index.js",
     "clean": "rm -rf dist",
-    "lint": "eslint src __tests__ --fix",
-    "prettier": "prettier src __tests__ --write"
+    "lint": "eslint src __tests__ --fix; prisma validate",
+    "prettier": "prettier src __tests__ --write; prisma format"
   },
   "keywords": [],
   "author": "Agustin Kassis",
