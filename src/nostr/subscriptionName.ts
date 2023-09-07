@@ -1,10 +1,20 @@
-import { NostrEvent } from '@nostr-dev-kit/ndk';
+import type { NDKFilter, NostrEvent } from '@nostr-dev-kit/ndk';
 
-const req = {};
+const req: NDKFilter = {
+  // ids: null,
+  authors: ['46241efb55cbfc73d410a136fac1cf88ddb6778014b8a58cecd0df8b01a98ffc'],
+  kinds: [1],
+  // '#e': null,
+  // '#p': null,
+  // '#a': null,
+  since: Math.round(Date.now() / 1000) - 86000,
+  until: Math.round(Date.now() / 1000) + 86000,
+  // limit: null,
+};
 
 const cb = (event: NostrEvent) => {
-  console.info('event: ');
-  console.info(event);
+  console.info('Received event: ');
+  console.dir(event);
 };
 
 export { req, cb };
