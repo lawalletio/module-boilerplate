@@ -19,13 +19,11 @@ WORKDIR /app
 COPY . .
 COPY --from=dependencies /app/node_modules ./node_modules
 #
-ENV SKIP_ENV_VALIDATION 1
 RUN ["pnpm", "build"]
 
 FROM base AS runner
 WORKDIR /app
 #
-COPY --from=build --chown=nextjs:nodejs /app/public ./public
 COPY --from=build --chown=nextjs:nodejs /app/dist /dist
 #
 USER nextjs
@@ -35,4 +33,4 @@ ENV PORT     3000
 #
 EXPOSE 3000
 #
-ENTRYPOINT ["pnpm", "start"]
+ENTRYPOINT ["node", "index.js"]
