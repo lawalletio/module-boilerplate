@@ -4,7 +4,8 @@ import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
 import * as middlewares from "./lib/middlewares";
-import { generateRoutes, getRestDirectory } from "./lib/utils";
+import { generateRoutes } from "./lib/utils";
+import path from "path";
 
 const app = express();
 
@@ -14,7 +15,7 @@ app.use(express.json());
 app.use(cors());
 
 // Generate routes
-const restDirectory = getRestDirectory();
+const restDirectory = path.join(__dirname, "rest");
 const routes = generateRoutes(restDirectory);
 
 // Setup express routes

@@ -1,0 +1,20 @@
+{
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "tsx": false,
+      "decorators": true,
+      "dynamicImport": true
+    },
+    "target": "es2020",
+    "paths": {
+      "@rest/*": ["./src/rest/*"]
+      // "@nostr/*": ["./src/nostr/*"],
+      // "@middlewares/*": ["./src/services/*"]
+    },
+    "baseUrl": "."
+  },
+  "module": {
+    "type": "commonjs"
+  }
+}
