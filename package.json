@@ -1,7 +1,7 @@
 {
-  "name": "express-typescript-boilerplate",
+  "name": "module-boilerplate",
   "version": "1.0.0",
-  "description": "Wallet provider for LaWallet",
+  "description": "LaWallet Module Boilerplate",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
