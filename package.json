@@ -12,6 +12,7 @@
     "node": "./dist/index.mjs"
   },
   "scripts": {
+    "postinstall": "prisma generate",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "dev": "concurrently \"npm run build:watch\" \"npm run dev:watch\"",
