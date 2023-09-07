@@ -1,12 +1,12 @@
-import { Router } from "express";
-import { globSync } from "glob";
+import { Router } from 'express';
+import { globSync } from 'glob';
 
-type RouteMethod = "get" | "post" | "put" | "patch" | "delete";
+type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
 export const generateRoutes = (relativePath: string): Router => {
   const router = Router();
 
-  globSync(`*.js`, {
+  globSync('*.js', {
     withFileTypes: true,
     cwd: relativePath,
     matchBase: true,
