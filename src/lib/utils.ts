@@ -7,24 +7,31 @@ type RouteMethod = "get" | "post" | "put" | "patch" | "delete";
 
 export const generateRoutes = (relativePath: string): Router => {
   const router = Router();
-  //   router.get("/", require("../rest/folder/:param/get").default);
-
-  const dirPath = getRestDirectory(relativePath);
-
-  console.info("YEAHHH");
-  const files = getAllFiles(dirPath, []);
+  const files = getAllFiles(relativePath);
 
   // Iterate through each file in the directory
-  files.forEach(async (file) => {
-    const filePath = path.join(dirPath, file);
-    const routeMethod = path.basename(file, path.extname(file)).toLowerCase();
+  files.forEach(async (filePath) => {
+    const routeMethod = path
+      .basename(filePath, path.extname(filePath))
+      .toLowerCase();
+
+    // if (!/([get|post|put|patch|delete]\.js)$/.test(file)) {
+    //   console.warn(
+    //     `Skipping ${file} as it doesn't correspond to a valid HTTP method.`,
+    //   );
+    // } else {
+    //   arrayOfFiles.push(path.join(dirPath, file));
+    // }
 
     // Create a new Express route based on the filename
+
+    console.info("-----------");
 
     console.info("filePath:");
     console.info(filePath);
     console.info("routeMethod:");
     console.info(routeMethod);
+    console.info("-----------");
 
     router[routeMethod as RouteMethod](
       filePath,
@@ -39,16 +46,16 @@ export const generateRoutes = (relativePath: string): Router => {
   return router;
 };
 
-export const getRestDirectory = (relativePath: string): string => {
-  // const __filename = fileURLToPath(relativePath);
-  const __dirname = path.dirname(relativePath);
+export const getRestDirectory = (relativePath: string = "rest"): string => {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
 
   return path.join(__dirname, relativePath);
 };
 
 export const getAllFiles = (
   dirPath: string,
-  arrayOfFiles: string[],
+  arrayOfFiles: string[] = [],
 ): string[] => {
   let files = fs.readdirSync(dirPath);
   files = files.filter((path) => !/\.map$/.test(path));
@@ -59,13 +66,7 @@ export const getAllFiles = (
     if (fs.statSync(path.join(dirPath, file)).isDirectory()) {
       arrayOfFiles = getAllFiles(path.join(dirPath, file), arrayOfFiles);
     } else {
-      if (!/([get|post|put|patch|delete]\.js)$/.test(file)) {
-        console.warn(
-          `Skipping ${file} as it doesn't correspond to a valid HTTP method.`,
-        );
-      } else {
-        arrayOfFiles.push(path.join(dirPath, file));
-      }
+      arrayOfFiles.push(path.join(dirPath, file));
     }
   });
 
