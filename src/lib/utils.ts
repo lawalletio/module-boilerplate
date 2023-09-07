@@ -16,13 +16,14 @@ export const generateRoutes = (relativePath: string): Router => {
     nodir: true,
   }).forEach(async (value) => {
     const filePath = value.relative();
-    const matches = filePath.match(/(get|post|put|patch|delete)\.js/i);
+    const matches = filePath.match(/^(?<route>.*)\/(?<method>get|post|put|patch|delete)\.js/i);
 
-    if (matches) {
-      const method: RouteMethod = matches[1] as RouteMethod;
+    if (matches?.groups) {
+      const method: RouteMethod = matches.groups.method as RouteMethod;
+      const route: string = `/${matches.groups.route}`;
 
-      router[method](filePath, (await require(value.fullpath())).default);
-      console.info(`Created ${method.toUpperCase()} route for ${filePath}`);
+      router[method](route, (await require(value.fullpath())).default);
+      console.info(`Created ${method.toUpperCase()} route for ${route}`);
     } else {
       console.warn(
         `Skipping ${filePath} as it doesn't correspond to a valid HTTP method.`,
