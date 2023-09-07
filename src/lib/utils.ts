@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { globSync } from 'glob';
+import NDK from '@nostr-dev-kit/ndk';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
@@ -30,4 +31,30 @@ export const setUpRoutes = (router: Router, relativePath: string): Router => {
   });
 
   return router;
+};
+
+export const setUpSubscriptions = (ndk: NDK, relativePath: string): NDK => {
+  globSync('*.{ts,js}', {
+    withFileTypes: true,
+    cwd: relativePath,
+    matchBase: true,
+    nocase: true,
+    nodir: true,
+  }).forEach(async (value) => {
+    const filePath = value.relative();
+    const matches = filePath.match(/^\/(?<name>[^/]*)\.(?:ts|js)/i);
+
+    if (matches?.groups) {
+      let [filters, handler] = (await require(value.fullpath())).default;
+      ndk.subscribe(filters).on('event', handler);
+
+      console.info(`Created ${matches.groups.name} subscription`);
+    } else {
+      console.warn(
+        `Skipping ${filePath} as it doesn't comply to subscription conventions.`,
+      );
+    }
+  });
+
+  return ndk;
 };
