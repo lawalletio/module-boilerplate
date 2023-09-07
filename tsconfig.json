@@ -4,18 +4,15 @@
     "outDir": "dist",
     "sourceMap": true,
     "target": "esnext",
-    "module": "commonjs",
+    "module": "esnext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "resolveJsonModule": true,
+    "moduleResolution": "node"
   },
-  "include": [
-    "./*.js",
-    "src/**/*.ts",
-    "test/**/*.ts",
-    "./api/*.ts",
-    "./__tests__/**.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }

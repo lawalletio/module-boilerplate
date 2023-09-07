@@ -1,5 +1,5 @@
 import { Response, Request, NextFunction } from "express";
-import { ErrorResponseContract } from "../contracts";
+import { ErrorResponseContract } from "../../types/responses";
 
 export function errorHandler(
   err: Error,
