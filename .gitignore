@@ -1,9 +1,13 @@
-node_modules/
-dist/
+# IDEs
 .idea
 .vscode
 
-# testing
-.coverage/
+# Pipeline
+node_modules
+dist
 
+# Testing
+.coverage
+
+# Local Config
 .env
