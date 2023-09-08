@@ -38,8 +38,7 @@ app.use(cors());
 
 // Generate routes
 console.info('Setting up routes...');
-const restDirectory = path.join(__dirname, 'rest');
-const routes = setUpRoutes(express.Router(), restDirectory);
+const routes = setUpRoutes(express.Router(), path.join(__dirname, 'rest'));
 
 // Setup context
 routes.use((req, res, next) => {
@@ -57,7 +56,7 @@ app.use(middlewares.errorHandler);
 
 // Setup Nostr subscriptions
 console.info('Subscribing...');
-setUpSubscriptions(ndk, 'nostr');
+setUpSubscriptions(ndk, path.join(__dirname, 'nostr'));
 
 // Connect to Nostr
 console.info('Connecting to Nostr...');

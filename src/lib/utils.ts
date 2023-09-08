@@ -4,10 +4,10 @@ import NDK from '@nostr-dev-kit/ndk';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
-export const setUpRoutes = (router: Router, relativePath: string): Router => {
+export const setUpRoutes = (router: Router, path: string): Router => {
   globSync('*.{ts,js}', {
     withFileTypes: true,
-    cwd: relativePath,
+    cwd: path,
     matchBase: true,
     nocase: true,
     nodir: true,
@@ -33,10 +33,10 @@ export const setUpRoutes = (router: Router, relativePath: string): Router => {
   return router;
 };
 
-export const setUpSubscriptions = (ndk: NDK, relativePath: string): NDK => {
+export const setUpSubscriptions = (ndk: NDK, path: string): NDK => {
   globSync('*.{ts,js}', {
     withFileTypes: true,
-    cwd: relativePath,
+    cwd: path,
     matchBase: true,
     nocase: true,
     nodir: true,
