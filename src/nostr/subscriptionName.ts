@@ -1,6 +1,6 @@
 import type { NDKFilter, NostrEvent } from '@nostr-dev-kit/ndk';
 
-const req: NDKFilter = {
+const filter: NDKFilter = {
   // ids: null,
   authors: ['46241efb55cbfc73d410a136fac1cf88ddb6778014b8a58cecd0df8b01a98ffc'],
   kinds: [1],
@@ -12,9 +12,9 @@ const req: NDKFilter = {
   // limit: null,
 };
 
-const cb = (event: NostrEvent) => {
+const handler = (event: NostrEvent) => {
   console.info('Received event: ');
   console.dir(event);
 };
 
-export { req, cb };
+export { filter, handler };

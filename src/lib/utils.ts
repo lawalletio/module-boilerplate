@@ -42,11 +42,11 @@ export const setUpSubscriptions = (ndk: NDK, path: string): NDK => {
     nodir: true,
   }).forEach(async (value) => {
     const filePath = value.relative();
-    const matches = filePath.match(/^\/(?<name>[^/]*)\.(?:ts|js)/i);
+    const matches = filePath.match(/^(?<name>[^/]*)\.(?:ts|js)/i);
 
     if (matches?.groups) {
-      let [filters, handler] = (await require(value.fullpath())).default;
-      ndk.subscribe(filters).on('event', handler);
+      let { filter, handler } = await require(value.fullpath());
+      ndk.subscribe(filter).on('event', handler);
 
       console.info(`Created ${matches.groups.name} subscription`);
     } else {
