@@ -1,6 +1,12 @@
-import NDK from '@nostr-dev-kit/ndk';
+declare global {
+  var WebSocket: typeof import('ws');
+}
 
-// import relayList from '@constants/relays.json';
+import NDK from '@nostr-dev-kit/ndk';
+import WebSocket from 'ws';
+global.WebSocket = WebSocket;
+
+import relayList from '@constants/relays.json';
 import { PrismaClient } from '@prisma/client';
 import 'dotenv/config';
 import express from 'express';
@@ -25,7 +31,7 @@ const app = express();
 // Instantiate ndk
 console.info('Instantiate NDK');
 const ndk = new NDK({
-  explicitRelayUrls: [],
+  explicitRelayUrls: relayList,
 });
 
 // --------- //
@@ -61,5 +67,13 @@ setUpSubscriptions(ndk, path.join(__dirname, 'nostr'));
 // Connect to Nostr
 console.info('Connecting to Nostr...');
 ndk.connect();
+
+ndk.addListener('connected', () => {
+  console.info('Connected to Relay');
+});
+
+ndk.addListener('error', () => {
+  console.info('Error connecting to Relay');
+});
 
 export default app;
