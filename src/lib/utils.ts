@@ -5,7 +5,7 @@ import NDK from '@nostr-dev-kit/ndk';
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
 export const setUpRoutes = (router: Router, path: string): Router => {
-  globSync('*.{ts,js}', {
+  globSync('*', {
     withFileTypes: true,
     cwd: path,
     matchBase: true,
@@ -34,7 +34,7 @@ export const setUpRoutes = (router: Router, path: string): Router => {
 };
 
 export const setUpSubscriptions = (ndk: NDK, path: string): NDK => {
-  globSync('*.{ts,js}', {
+  globSync('*', {
     withFileTypes: true,
     cwd: path,
     matchBase: true,
