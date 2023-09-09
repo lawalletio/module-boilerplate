@@ -46,6 +46,10 @@ app.use(cors());
 console.info('Setting up routes...');
 const routes = setUpRoutes(express.Router(), path.join(__dirname, 'rest'));
 
+if (null === routes) {
+  throw new Error('Error setting up routes');
+}
+
 // Setup context
 routes.use((req, res, next) => {
   console.log('Time:', Date.now());
@@ -62,7 +66,11 @@ app.use(middlewares.errorHandler);
 
 // Setup Nostr subscriptions
 console.info('Subscribing...');
-setUpSubscriptions(ndk, path.join(__dirname, 'nostr'));
+const subscribed = setUpSubscriptions(ndk, path.join(__dirname, 'nostr'));
+
+if (null === subscribed) {
+  throw new Error('Error setting up subscriptions');
+}
 
 // Connect to Nostr
 console.info('Connecting to Nostr...');
