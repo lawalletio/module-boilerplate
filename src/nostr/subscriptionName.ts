@@ -13,8 +13,8 @@ const filter: NDKFilter = {
 };
 
 const handler = (event: NostrEvent) => {
-  console.info('Received event: ');
-  console.dir(event);
+  console.info('******* Received event: *******');
+  console.dir(event.content);
 };
 
 export { filter, handler };

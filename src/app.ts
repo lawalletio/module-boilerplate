@@ -68,11 +68,11 @@ setUpSubscriptions(ndk, path.join(__dirname, 'nostr'));
 console.info('Connecting to Nostr...');
 ndk.connect();
 
-ndk.addListener('connected', () => {
+ndk.on('relay:connect', () => {
   console.info('Connected to Relay');
 });
 
-ndk.addListener('error', () => {
+ndk.on('error', () => {
   console.info('Error connecting to Relay');
 });
 
