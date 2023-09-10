@@ -105,7 +105,11 @@ export const setUpSubscriptions = (ndk: NDK, path: string): NDK | null => {
 
     if (matches?.groups) {
       let { filter, handler } = await require(Path.resolve(path, file));
-      ndk.subscribe(filter).on('event', handler);
+      ndk
+        .subscribe(filter, {
+          closeOnEose: false,
+        })
+        .on('event', handler);
 
       console.info(`Created ${matches.groups.name} subscription`);
     } else {
