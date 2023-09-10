@@ -1,10 +1,5 @@
-declare global {
-  var WebSocket: typeof import('ws');
-}
-
-import NDK from '@nostr-dev-kit/ndk';
-import WebSocket from 'ws';
-global.WebSocket = WebSocket;
+import '@lib/websockets';
+import NDK, { NDKRelay } from '@nostr-dev-kit/ndk';
 
 import relayList from '@constants/relays.json';
 import { PrismaClient } from '@prisma/client';
@@ -64,20 +59,26 @@ app.use('/', routes);
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
 
-// Setup Nostr subscriptions
-console.info('Subscribing...');
-const subscribed = setUpSubscriptions(ndk, path.join(__dirname, 'nostr'));
-
-if (null === subscribed) {
-  throw new Error('Error setting up subscriptions');
-}
-
 // Connect to Nostr
 console.info('Connecting to Nostr...');
 ndk.connect();
 
-ndk.on('relay:connect', () => {
-  console.info('Connected to Relay');
+ndk.pool.on('connect', () => {
+  // Setup Nostr subscriptions
+  console.info('Subscribing...');
+  const subscribed = setUpSubscriptions(ndk, path.join(__dirname, 'nostr'));
+
+  if (null === subscribed) {
+    throw new Error('Error setting up subscriptions');
+  }
+});
+
+ndk.pool.on('relay:connect', (relay: NDKRelay) => {
+  console.info('Connected to Relay', relay.url);
+});
+
+ndk.pool.on('relay:connect', (relay: NDKRelay) => {
+  console.info('Connected to Relay', relay.url);
 });
 
 ndk.on('error', () => {
