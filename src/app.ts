@@ -63,19 +63,12 @@ app.use(middlewares.errorHandler);
 console.info('Connecting to Nostr...');
 ndk.connect();
 
-ndk.pool.on('connect', () => {
-  // Setup Nostr subscriptions
-  console.info('Subscribing...');
-  const subscribed = setUpSubscriptions(ndk, path.join(__dirname, 'nostr'));
+console.info('Subscribing...');
+const subscribed = setUpSubscriptions(ndk, path.join(__dirname, 'nostr'));
 
-  if (null === subscribed) {
-    throw new Error('Error setting up subscriptions');
-  }
-});
-
-ndk.pool.on('relay:connect', (relay: NDKRelay) => {
-  console.info('Connected to Relay', relay.url);
-});
+if (null === subscribed) {
+  throw new Error('Error setting up subscriptions');
+}
 
 ndk.pool.on('relay:connect', (relay: NDKRelay) => {
   console.info('Connected to Relay', relay.url);
