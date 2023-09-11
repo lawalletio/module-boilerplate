@@ -3,7 +3,7 @@ import NDK, { NDKRelay } from '@nostr-dev-kit/ndk';
 
 import relayList from '@constants/relays.json';
 import { PrismaClient } from '@prisma/client';
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
 import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
@@ -12,6 +12,10 @@ import * as middlewares from '@lib/middlewares';
 import { setUpRoutes, setUpSubscriptions } from '@lib/utils';
 import path from 'path';
 import { ExtendedRequest } from '@type/request';
+import { OutboxService } from '@services/outbox/Outbox';
+
+// Instantiate .env
+dotenv.config({ path: __dirname + '/.env' });
 
 // Instantiate prisma client
 console.info('Instantiate prisma');
@@ -50,6 +54,7 @@ routes.use((req, res, next) => {
   console.log('Time:', Date.now());
   (req as ExtendedRequest).context = {
     prisma,
+    outbox: new OutboxService(),
   };
   next();
 });
