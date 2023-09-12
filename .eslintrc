@@ -19,6 +19,7 @@
     "@typescript-eslint/no-redeclare": 0,
     "no-unused-vars": "warn"
   },
+  "ignorePatterns": ["jest.config.js"],
   "settings": {
     "import/parsers": {
       "@typescript-eslint/parser": [".ts"]
