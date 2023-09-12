@@ -1,18 +1,18 @@
-import '@lib/websockets';
+import './lib/websockets';
 import NDK, { NDKRelay } from '@nostr-dev-kit/ndk';
 
-import relayList from '@constants/relays.json';
+import relayList from './constants/relays.json';
 import { PrismaClient } from '@prisma/client';
 import * as dotenv from 'dotenv';
 import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
-import * as middlewares from '@lib/middlewares';
-import { setUpRoutes, setUpSubscriptions } from '@lib/utils';
+import * as middlewares from './lib/middlewares';
+import { setUpRoutes, setUpSubscriptions } from './lib/utils';
 import path from 'path';
-import { ExtendedRequest } from '@type/request';
-import { OutboxService } from '@services/outbox/Outbox';
+import { ExtendedRequest } from './type/request';
+import { OutboxService } from './services/outbox/Outbox';
 
 // Instantiate .env
 dotenv.config({ path: __dirname + '/.env' });

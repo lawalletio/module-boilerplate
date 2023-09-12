@@ -3,7 +3,7 @@ import NDK, {
   NDKPrivateKeySigner,
   NostrEvent,
 } from '@nostr-dev-kit/ndk';
-import relayList from '@constants/relays.json';
+import relayList from '../../constants/relays.json';
 
 export class OutboxService {
   private ndk: NDK;
