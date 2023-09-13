@@ -2,10 +2,12 @@ import NDK, { type NDKRelay } from '@nostr-dev-kit/ndk';
 import app from './app';
 import path from 'path';
 import express from 'express';
+import * as middlewares from './lib/middlewares';
 import { PrismaClient } from '@prisma/client';
 import { setUpRoutes, setUpSubscriptions } from '@lib/utils';
 import { OutboxService } from '@services/outbox/Outbox';
 import { ExtendedRequest } from '@type/request';
+
 import relayList from './constants/relays.json';
 
 const port = process.env.PORT || 8000;
@@ -57,6 +59,10 @@ routes.use((req, res, next) => {
 
 // Setup express routes
 app.use('/', routes);
+
+// Setup express routes
+app.use(middlewares.notFound);
+app.use(middlewares.errorHandler);
 
 //-- Start process --//
 
