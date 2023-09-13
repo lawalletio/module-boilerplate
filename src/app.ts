@@ -1,5 +1,3 @@
-import './lib/websockets';
-
 import * as dotenv from 'dotenv';
 import express from 'express';
 import morgan from 'morgan';
