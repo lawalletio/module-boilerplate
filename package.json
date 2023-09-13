@@ -13,7 +13,7 @@
   },
   "scripts": {
     "postinstall": "prisma generate",
-    "test": "jest --coverage --debug",
+    "test": "jest --coverage",
     "test:watch": "jest --watch",
     "dev": "concurrently \"pnpm run build:watch\" \"pnpm run dev:watch\"",
     "dev:watch": "nodemon --watch \"dist/**/*\" -e js ./dist/index.js",
