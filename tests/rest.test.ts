@@ -1,11 +1,11 @@
-import { setUpRoutes } from './../src/lib/utils';
+import { setUpRoutes } from '../src/lib/utils';
 import request from 'supertest';
 import app from '../src/app';
 
 import express from 'express';
 import path from 'path';
 
-describe('Api request', () => {
+describe('Rest requests', () => {
   beforeAll(async () => {
     const routes = setUpRoutes(express.Router(), path.join(__dirname, 'rest'));
     await app.use('/', routes!);
@@ -13,9 +13,6 @@ describe('Api request', () => {
   });
 
   it('should return status 200 on GET', async () => {
-    console.info('ROUTES:');
-    console.dir(app.routes);
-
     app.use('/folder/:param1', (req, res) => {
       res.status(200).json({ message: 'Hello world!' });
     });
