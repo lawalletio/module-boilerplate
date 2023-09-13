@@ -35,8 +35,8 @@ ndk.pool.on('relay:connect', (relay: NDKRelay) => {
   console.info('Connected to Relay', relay.url);
 });
 
-ndk.on('error', () => {
-  console.info('Error connecting to Relay');
+ndk.on('error', (err) => {
+  console.info('Error connecting to Relay', err);
 });
 
 // Generate routes
@@ -49,7 +49,6 @@ if (null === routes) {
 
 // Setup context
 routes.use((req, res, next) => {
-  console.log('Time:', Date.now());
   (req as ExtendedRequest).context = {
     prisma,
     outbox: new OutboxService(),
