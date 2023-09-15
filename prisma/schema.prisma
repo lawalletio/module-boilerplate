@@ -30,7 +30,7 @@ model Token {
 }
 
 model TransactionType {
-  id   		  String @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  id          String @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
   description String @map("description")
 
   transactions Transaction[] @relation
@@ -40,14 +40,14 @@ model TransactionType {
 }
 
 model Transaction {
-  id  			 	String @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  id                String @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
   transactionTypeId String @map("transaction_type_id") @db.Uuid
-  payload        	Json   @map("payload") @db.JsonB
-  eventId        	String @map("event_id")
+  payload           Json   @map("payload") @db.JsonB
+  eventId           String @map("event_id")
 
-  transactionType TransactionType      @relation(fields: [transactionTypeId], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  snapshots    BalanceSnapshot[] @relation
-  event        Event             @relation(fields: [eventId], references: [signature], onUpdate: NoAction, onDelete: NoAction)
+  transactionType TransactionType   @relation(fields: [transactionTypeId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  snapshots       BalanceSnapshot[] @relation
+  event           Event             @relation(fields: [eventId], references: [signature], onUpdate: NoAction, onDelete: NoAction)
 
   @@id([id])
   @@unique([eventId])
@@ -55,14 +55,14 @@ model Transaction {
 }
 
 model BalanceSnapshot {
-  id  			 	String  @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
-  prevSnapshotId 	String? @map("prev_id") @db.Uuid
-  amount         	Decimal @map("amount")
-  transactionId     String  @map("transaction_id") @db.Uuid
-  eventId        	String  @map("event_id")
-  delta          	Decimal @map("delta") // denormalized
-  tokenId        	String  @map("token_id") @db.Uuid // denormalized
-  accountId      	String  @map("account_id") @db.Uuid // denormalized
+  id             String  @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  prevSnapshotId String? @map("prev_id") @db.Uuid
+  amount         Decimal @map("amount")
+  transactionId  String  @map("transaction_id") @db.Uuid
+  eventId        String  @map("event_id")
+  delta          Decimal @map("delta") // denormalized
+  tokenId        String  @map("token_id") @db.Uuid // denormalized
+  accountId      String  @map("account_id") @db.Uuid // denormalized
 
   prevSnapshot  BalanceSnapshot? @relation("link", fields: [prevSnapshotId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   nextSnapshot  BalanceSnapshot? @relation("link")
@@ -96,7 +96,7 @@ model Balance {
 }
 
 model Event {
-  id	    String @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  id        String @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
   signature String @map("signature")
   author    String @map("author")
   signer    String @map("signer")
