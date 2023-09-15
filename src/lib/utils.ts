@@ -7,7 +7,7 @@ import Path from 'path';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
-export const logger: debug.Debugger = debug(process.env.MODULE_NAME);
+export const logger: debug.Debugger = debug(process.env.MODULE_NAME || "");
 const log: debug.Debugger = logger.extend('lib:utils');
 const warn: debug.Debugger = logger.extend('lib:utils:warn');
 
