@@ -1,3 +1,4 @@
+import debug from 'debug';
 import { Router } from 'express';
 import { globSync } from 'glob';
 import NDK from '@nostr-dev-kit/ndk';
@@ -5,6 +6,10 @@ import NDK from '@nostr-dev-kit/ndk';
 import Path from 'path';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
+
+export const logger: debug.Debugger = debug(process.env.MODULE_NAME);
+const log: debug.Debugger = logger.extend('lib:utils');
+const warn: debug.Debugger = logger.extend('lib:utils:warn');
 
 const filesWithExtensionsWithoutExtensions = (
   path: string,
@@ -63,7 +68,7 @@ export const setUpRoutes = (router: Router, path: string): Router | null => {
 
   if (duplicates.length) {
     duplicates.forEach((duplicate) =>
-      console.warn(`Found duplicate route ${duplicate}`),
+      warn(`Found duplicate route ${duplicate}`),
     );
     return null;
   }
@@ -78,11 +83,9 @@ export const setUpRoutes = (router: Router, path: string): Router | null => {
       const route: string = `/${matches.groups.route}`;
 
       router[method](route, (await require(Path.resolve(path, file))).default);
-      console.info(`Created ${method.toUpperCase()} route for ${route}`);
+      log(`Created ${method.toUpperCase()} route for ${route}`);
     } else {
-      console.warn(
-        `Skipping ${file} as it doesn't comply to routes conventions.`,
-      );
+      warn(`Skipping ${file} as it doesn't comply to routes conventions.`);
     }
   });
 
@@ -95,7 +98,7 @@ export const setUpSubscriptions = (ndk: NDK, path: string): NDK | null => {
 
   if (duplicates.length) {
     duplicates.forEach((duplicate) =>
-      console.warn(`Found duplicate subscription ${duplicate}`),
+      warn(`Found duplicate subscription ${duplicate}`),
     );
     return null;
   }
@@ -111,9 +114,9 @@ export const setUpSubscriptions = (ndk: NDK, path: string): NDK | null => {
         })
         .on('event', handler);
 
-      console.info(`Created ${matches.groups.name} subscription`);
+      log(`Created ${matches.groups.name} subscription`);
     } else {
-      console.warn(
+      warn(
         `Skipping ${file} as it doesn't comply to subscription conventions.`,
       );
     }

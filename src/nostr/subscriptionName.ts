@@ -1,4 +1,9 @@
+import { Debugger } from 'debug';
 import type { NDKFilter, NostrEvent } from '@nostr-dev-kit/ndk';
+
+import { logger } from '../lib/utils';
+
+const log: Debugger = logger.extend('nostr:subscriptionName');
 
 const filter: NDKFilter = {
   // ids: null,
@@ -13,8 +18,8 @@ const filter: NDKFilter = {
 };
 
 const handler = (event: NostrEvent) => {
-  console.info('******* Received event: *******');
-  console.dir(event.content);
+  log('******* Received event: *******');
+  log(event.content);
 };
 
 export { filter, handler };

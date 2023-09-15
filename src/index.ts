@@ -1,6 +1,7 @@
 import NDK, { type NDKRelay } from '@nostr-dev-kit/ndk';
 import app from './app';
 import path from 'path';
+import { Debugger } from 'debug';
 import express from 'express';
 import * as middlewares from './lib/middlewares';
 import { PrismaClient } from '@prisma/client';
@@ -10,21 +11,25 @@ import { ExtendedRequest } from '@type/request';
 import 'websocket-polyfill';
 import relayList from './constants/relays.json';
 
+import { logger } from './lib/utils';
+
 const port = process.env.PORT || 8000;
 
+const log: Debugger = logger.extend('index');
+
 // Instantiate prisma client
-console.info('Instantiate prisma');
+log('Instantiate prisma');
 const prisma = new PrismaClient({
   log: [{ level: 'query', emit: 'event' }],
 });
 
 // Instantiate ndk
-console.info('Instantiate NDK');
+log('Instantiate NDK');
 const ndk = new NDK({
   explicitRelayUrls: relayList,
 });
 
-console.info('Subscribing...');
+log('Subscribing...');
 const subscribed = setUpSubscriptions(ndk, path.join(__dirname, 'nostr'));
 
 if (null === subscribed) {
@@ -32,15 +37,15 @@ if (null === subscribed) {
 }
 
 ndk.pool.on('relay:connect', (relay: NDKRelay) => {
-  console.info('Connected to Relay', relay.url);
+  log('Connected to Relay', relay.url);
 });
 
 ndk.on('error', (err) => {
-  console.info('Error connecting to Relay', err);
+  log('Error connecting to Relay', err);
 });
 
 // Generate routes
-console.info('Setting up routes...');
+log('Setting up routes...');
 const routes = setUpRoutes(express.Router(), path.join(__dirname, 'rest'));
 
 if (null === routes) {
@@ -67,9 +72,9 @@ app.use(middlewares.errorHandler);
 
 // Start listening
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  log(`Server is running on port ${port}`);
 });
 
 // Connect to Nostr
-console.info('Connecting to Nostr...');
+log('Connecting to Nostr...');
 ndk.connect();
