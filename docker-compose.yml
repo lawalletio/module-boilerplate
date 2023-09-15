@@ -2,13 +2,13 @@ version: "3.8"
 services:
   postgres:
     container_name: postgres
-    image: postgres:12-bullseye
+    image: postgres:15
     restart: always
     environment:
       DATABASE_HOST: localhost
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
-      POSTGRES_DB: wallet_provider
+      POSTGRES_DB: lawallet-extension
     ports:
       - 5432:5432
 
