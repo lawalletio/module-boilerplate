@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Account {
-  id   String @map("id") @db.Uuid
+  id   String @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
   name String @map("name")
 
   balances Balance[] @relation
@@ -19,7 +19,7 @@ model Account {
 }
 
 model Token {
-  id   String @map("id") @db.Uuid
+  id   String @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
   name String @map("name")
 
   balances Balance[] @relation
@@ -29,46 +29,46 @@ model Token {
   @@map("tokens")
 }
 
-model MovementType {
-  id          String @map("id") @db.Uuid
+model TransactionType {
+  id   		  String @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
   description String @map("description")
 
-  movements Movement[] @relation
+  transactions Transaction[] @relation
 
   @@id([id])
-  @@map("movement_types")
+  @@map("Transaction_types")
 }
 
-model Movement {
-  id             String @map("id") @db.Uuid
-  movementTypeId String @map("movement_type_id") @db.Uuid
-  payload        Json   @map("payload") @db.JsonB
-  eventId        String @map("event_id")
+model Transaction {
+  id  			 	String @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  transactionTypeId String @map("transaction_type_id") @db.Uuid
+  payload        	Json   @map("payload") @db.JsonB
+  eventId        	String @map("event_id")
 
-  movementType MovementType      @relation(fields: [movementTypeId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  transactionType TransactionType      @relation(fields: [transactionTypeId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   snapshots    BalanceSnapshot[] @relation
   event        Event             @relation(fields: [eventId], references: [signature], onUpdate: NoAction, onDelete: NoAction)
 
   @@id([id])
   @@unique([eventId])
-  @@map("movements")
+  @@map("transactions")
 }
 
 model BalanceSnapshot {
-  id             String  @map("id") @db.Uuid
-  prevSnapshotId String? @map("prev_id") @db.Uuid
-  amount         Decimal @map("amount")
-  movementId     String  @map("movement_id") @db.Uuid
-  eventId        String  @map("event_id")
-  delta          Decimal @map("delta") // denormalized
-  tokenId        String  @map("token_id") @db.Uuid // denormalized
-  accountId      String  @map("account_id") @db.Uuid // denormalized
+  id  			 	String  @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  prevSnapshotId 	String? @map("prev_id") @db.Uuid
+  amount         	Decimal @map("amount")
+  transactionId     String  @map("transaction_id") @db.Uuid
+  eventId        	String  @map("event_id")
+  delta          	Decimal @map("delta") // denormalized
+  tokenId        	String  @map("token_id") @db.Uuid // denormalized
+  accountId      	String  @map("account_id") @db.Uuid // denormalized
 
   prevSnapshot  BalanceSnapshot? @relation("link", fields: [prevSnapshotId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   nextSnapshot  BalanceSnapshot? @relation("link")
   event         Event            @relation(fields: [eventId], references: [signature], onUpdate: NoAction, onDelete: NoAction)
   balance       Balance          @relation("snapshot_to_balance", fields: [tokenId, accountId], references: [tokenId, accountId], onUpdate: NoAction, onDelete: NoAction)
-  movement      Movement         @relation(fields: [movementId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  transaction   Transaction      @relation(fields: [transactionId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   dummy_balance Balance?         @relation("balance_to_snapshot") @ignore
 
   @@id([id])
@@ -96,14 +96,14 @@ model Balance {
 }
 
 model Event {
-  id        String @map("id")
+  id	    String @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
   signature String @map("signature")
   author    String @map("author")
   signer    String @map("signer")
   kind      Int    @map("kind")
   payload   Json   @map("payload") @db.JsonB
 
-  movement        Movement?        @relation
+  transaction     Transaction?     @relation
   balanceSnapshot BalanceSnapshot? @relation
   balance         Balance?         @relation
 
@@ -212,7 +212,7 @@ model Event {
 // ;
 
 // --
-// -- Select the movement UUIDs and token UUIDs for unbalanced movements
+// -- Select the transaction UUIDs and token UUIDs for unbalanced movements
 // --
 //
 // SELECT
