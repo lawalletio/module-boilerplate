@@ -15,6 +15,7 @@ import { logger } from './lib/utils';
 const port = process.env.PORT || 8000;
 
 const log: Debugger = logger.extend('index');
+const warn: Debugger = log.extend('warn');
 
 // Instantiate prisma client
 log('Instantiate prisma');
@@ -76,4 +77,5 @@ app.listen(port, () => {
 
 // Connect to Nostr
 log('Connecting to Nostr...');
-ndk.connect();
+ndk.connect()
+  .catch((error) => warn("Error connecting to nostr: %o", error));
