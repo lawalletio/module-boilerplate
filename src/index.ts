@@ -1,4 +1,4 @@
-import NDK, { type NDKRelay } from '@nostr-dev-kit/ndk';
+import NDK, { NDKPrivateKeySigner, type NDKRelay } from '@nostr-dev-kit/ndk';
 import app from './app';
 import path from 'path';
 import { Debugger } from 'debug';
@@ -7,7 +7,7 @@ import * as middlewares from './lib/middlewares';
 import { PrismaClient } from '@prisma/client';
 import { setUpRoutes, setUpSubscriptions } from '@lib/utils';
 import { OutboxService } from '@services/outbox/Outbox';
-import { ExtendedRequest } from '@type/request';
+import { Context, ExtendedRequest } from '@type/request';
 import 'websocket-polyfill';
 
 import { logger } from './lib/utils';
@@ -27,10 +27,16 @@ const prisma = new PrismaClient({
 log('Instantiate NDK');
 const ndk = new NDK({
   explicitRelayUrls: process.env.NOSTR_RELAYS?.split(','),
+  signer: new NDKPrivateKeySigner(process.env.NOSTR_PRIVATE_KEY),
 });
 
+const ctx: Context = {
+  prisma,
+  outbox: new OutboxService(ndk),
+};
+
 log('Subscribing...');
-const subscribed = setUpSubscriptions(ndk, path.join(__dirname, 'nostr'));
+const subscribed = setUpSubscriptions(ctx, ndk, path.join(__dirname, 'nostr'));
 
 if (null === subscribed) {
   throw new Error('Error setting up subscriptions');
@@ -54,10 +60,7 @@ if (null === routes) {
 
 // Setup context
 routes.use((req, res, next) => {
-  (req as ExtendedRequest).context = {
-    prisma,
-    outbox: new OutboxService(),
-  };
+  (req as ExtendedRequest).context = ctx;
   next();
 });
 
@@ -77,5 +80,4 @@ app.listen(port, () => {
 
 // Connect to Nostr
 log('Connecting to Nostr...');
-ndk.connect()
-  .catch((error) => warn("Error connecting to nostr: %o", error));
+ndk.connect().catch((error) => warn('Error connecting to nostr: %o', error));

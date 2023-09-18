@@ -4,6 +4,7 @@ import { globSync } from 'glob';
 import NDK from '@nostr-dev-kit/ndk';
 
 import Path from 'path';
+import { Context } from '@type/request';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
@@ -92,7 +93,11 @@ export const setUpRoutes = (router: Router, path: string): Router | null => {
   return router;
 };
 
-export const setUpSubscriptions = (ndk: NDK, path: string): NDK | null => {
+export const setUpSubscriptions = (
+  ctx: Context,
+  ndk: NDK,
+  path: string,
+): NDK | null => {
   const allFiles = filesWithExtensionsWithoutExtensions(path, ['js', 'ts']);
   const duplicates = findDuplicates(allFiles);
 
@@ -107,12 +112,12 @@ export const setUpSubscriptions = (ndk: NDK, path: string): NDK | null => {
     const matches = file.match(/^(?<name>[^/]*)$/i);
 
     if (matches?.groups) {
-      let { filter, handler } = await require(Path.resolve(path, file));
+      let { filter, getHandler } = await require(Path.resolve(path, file));
       ndk
         .subscribe(filter, {
           closeOnEose: false,
         })
-        .on('event', handler);
+        .on('event', getHandler(ctx));
 
       log(`Created ${matches.groups.name} subscription`);
     } else {
@@ -123,4 +128,12 @@ export const setUpSubscriptions = (ndk: NDK, path: string): NDK | null => {
   });
 
   return ndk;
+};
+
+export const requiredEnvVar = (key: string): string => {
+  const envVar = process.env[key];
+  if (undefined === envVar) {
+    throw new Error(`Environment process ${key} must be defined`);
+  }
+  return envVar;
 };

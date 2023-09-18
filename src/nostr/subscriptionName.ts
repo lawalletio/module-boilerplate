@@ -2,12 +2,13 @@ import { Debugger } from 'debug';
 import type { NDKFilter, NostrEvent } from '@nostr-dev-kit/ndk';
 
 import { logger } from '../lib/utils';
+import { Context } from '@type/request';
 
 const log: Debugger = logger.extend('nostr:subscriptionName');
 
 const filter: NDKFilter = {
   // ids: null,
-  authors: ['46241efb55cbfc73d410a136fac1cf88ddb6778014b8a58cecd0df8b01a98ffc'],
+  authors: [''],
   kinds: [1],
   // '#e': null,
   // '#p': null,
@@ -17,9 +18,12 @@ const filter: NDKFilter = {
   // limit: null,
 };
 
-const handler = (event: NostrEvent) => {
-  log('******* Received event: *******');
-  log(event.content);
+const getHandler = (ctx: Context): ((event: NostrEvent) => void) => {
+  return (event: NostrEvent) => {
+    log('******* Received event: *******');
+    log(event.content);
+    ctx.outbox.publish(event);
+  };
 };
 
-export { filter, handler };
+export { filter, getHandler };
