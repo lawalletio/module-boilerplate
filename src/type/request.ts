@@ -3,7 +3,7 @@ import type { PrismaClient } from '@prisma/client';
 import { OutboxService } from '@services/outbox/Outbox';
 
 export interface Context {
-  prisma?: PrismaClient;
+  prisma: PrismaClient;
   outbox: OutboxService;
 }
 

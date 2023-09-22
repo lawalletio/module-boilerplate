@@ -117,7 +117,7 @@ export const setUpSubscriptions = (
         .subscribe(filter, {
           closeOnEose: false,
         })
-        .on('event', getHandler(ctx));
+        .on('event', getHandler(ctx, 0));
 
       log(`Created ${matches.groups.name} subscription`);
     } else {
@@ -136,4 +136,15 @@ export const requiredEnvVar = (key: string): string => {
     throw new Error(`Environment process ${key} must be defined`);
   }
   return envVar;
+};
+
+export const requiredProp = <T>(obj: any, key: string): T => {
+  if (obj[key] === undefined) {
+    throw new Error(`Expected ${key} of ${obj} to be defined`);
+  }
+  return obj[key];
+};
+
+export const nowInSeconds = (): number => {
+  return Math.round(Date.now() / 1000);
 };
