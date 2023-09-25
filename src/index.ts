@@ -2,10 +2,10 @@ import NDK, { NDKPrivateKeySigner, type NDKRelay } from '@nostr-dev-kit/ndk';
 import app from './app';
 import path from 'path';
 import { Debugger } from 'debug';
-import express from 'express';
+import express, { Router } from 'express';
 import * as middlewares from './lib/middlewares';
 import { PrismaClient } from '@prisma/client';
-import { setUpRoutes, setUpSubscriptions } from '@lib/utils';
+import { EmptyRoutesError, setUpRoutes, setUpSubscriptions } from '@lib/utils';
 import { OutboxService } from '@services/outbox/Outbox';
 import { Context, ExtendedRequest } from '@type/request';
 import 'websocket-polyfill';
@@ -52,31 +52,41 @@ ndk.on('error', (err) => {
 
 // Generate routes
 log('Setting up routes...');
-const routes = setUpRoutes(express.Router(), path.join(__dirname, 'rest'));
+let routes: Router = express.Router();
+let startExpress = true;
 
-if (null === routes) {
-  throw new Error('Error setting up routes');
+try {
+  routes = setUpRoutes(routes, path.join(__dirname, 'rest'));
+} catch (e) {
+  if (e instanceof EmptyRoutesError) {
+    log('Empty routes, this module will not be reachable by HTTP API');
+    startExpress = false;
+  } else {
+    throw e;
+  }
 }
 
-// Setup context
-routes.use((req, res, next) => {
-  (req as ExtendedRequest).context = ctx;
-  next();
-});
+if (startExpress) {
+  // Setup context
+  routes.use((req, res, next) => {
+    (req as ExtendedRequest).context = ctx;
+    next();
+  });
 
-// Setup express routes
-app.use('/', routes);
+  // Setup express routes
+  app.use('/', routes);
 
-// Setup express routes
-app.use(middlewares.notFound);
-app.use(middlewares.errorHandler);
+  // Setup express routes
+  app.use(middlewares.notFound);
+  app.use(middlewares.errorHandler);
 
-//-- Start process --//
+  //-- Start process --//
 
-// Start listening
-app.listen(port, () => {
-  log(`Server is running on port ${port}`);
-});
+  // Start listening
+  app.listen(port, () => {
+    log(`Server is running on port ${port}`);
+  });
+}
 
 // Connect to Nostr
 log('Connecting to Nostr...');

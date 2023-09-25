@@ -12,6 +12,9 @@ export const logger: debug.Debugger = debug(process.env.MODULE_NAME || '');
 const log: debug.Debugger = logger.extend('lib:utils');
 const warn: debug.Debugger = logger.extend('lib:utils:warn');
 
+export class EmptyRoutesError extends Error {}
+export class DuplicateRoutesError extends Error {}
+
 const filesWithExtensionsWithoutExtensions = (
   path: string,
   extensions: string[],
@@ -63,15 +66,16 @@ const findDuplicates = (values: string[]) => {
   return duplicates;
 };
 
-export const setUpRoutes = (router: Router, path: string): Router | null => {
+export const setUpRoutes = (router: Router, path: string): Router => {
   const allFiles = filesWithExtensionsWithoutExtensions(path, ['js', 'ts']);
   const duplicates = findDuplicates(allFiles);
 
+  if (0 === allFiles.length) {
+    throw new EmptyRoutesError();
+  }
+
   if (duplicates.length) {
-    duplicates.forEach((duplicate) =>
-      warn(`Found duplicate route ${duplicate}`),
-    );
-    return null;
+    throw new DuplicateRoutesError(`Duplicate routes: ${duplicates}`);
   }
 
   allFiles.forEach(async (file) => {
