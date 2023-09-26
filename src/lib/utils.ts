@@ -15,6 +15,7 @@ const warn: debug.Debugger = logger.extend('lib:utils:warn');
 export class EmptyRoutesError extends Error {}
 export class DuplicateRoutesError extends Error {}
 
+const methods: RouteMethod[] = ['get', 'post', 'put', 'patch', 'delete'];
 const filesWithExtensionsWithoutExtensions = (
   path: string,
   extensions: string[],
@@ -78,19 +79,50 @@ export const setUpRoutes = (router: Router, path: string): Router => {
     throw new DuplicateRoutesError(`Duplicate routes: ${duplicates}`);
   }
 
-  allFiles.forEach(async (file) => {
-    const matches = file.match(
-      /^(?<route>.*)\/(?<method>get|post|put|patch|delete)$/i,
-    );
+  const routeHandlers = new Promise<Record<string, RouteMethod[]>>(
+    (resolve, _reject) => {
+      const allowedMethods: Record<string, RouteMethod[]> = {};
+      allFiles.forEach(async (file, index, array) => {
+        const matches = file.match(
+          /^(?<route>.*)\/(?<method>get|post|put|patch|delete)$/i,
+        );
 
-    if (matches?.groups) {
-      const method: RouteMethod = matches.groups.method as RouteMethod;
-      const route: string = `/${matches.groups.route}`;
+        if (matches?.groups) {
+          const method: RouteMethod = matches.groups.method as RouteMethod;
+          const route: string = `/${matches.groups.route}`;
 
-      router[method](route, (await require(Path.resolve(path, file))).default);
-      log(`Created ${method.toUpperCase()} route for ${route}`);
-    } else {
-      warn(`Skipping ${file} as it doesn't comply to routes conventions.`);
+          router[method](
+            route,
+            (await require(Path.resolve(path, file))).default,
+          );
+          log(`Created ${method.toUpperCase()} route for ${route}`);
+          if (undefined == allowedMethods[route]) {
+            allowedMethods[route] = [];
+          }
+          allowedMethods[route].push(method);
+        } else {
+          warn(`Skipping ${file} as it doesn't comply to routes conventions.`);
+        }
+        if (index === array.length - 1) {
+          resolve(allowedMethods);
+        }
+      });
+    },
+  );
+  routeHandlers.then((allowedMethods) => {
+    log('Allowed methods %O', allowedMethods);
+    for (const route in allowedMethods) {
+      const allowed = allowedMethods[route]
+        .map((m) => m.toUpperCase())
+        .join(', ');
+      methods
+        .filter((m) => !allowedMethods[route].includes(m))
+        .forEach((m) => {
+          router[m](route, (req, res) => {
+            res.status(405).header('Allow', `OPTIONS, ${allowed}`).send();
+          });
+          log(`Created ${m.toUpperCase()} route for ${route}`);
+        });
     }
   });
 
@@ -151,4 +183,11 @@ export const requiredProp = <T>(obj: any, key: string): T => {
 
 export const nowInSeconds = (): number => {
   return Math.round(Date.now() / 1000);
+};
+
+export const isEmpty = (obj: object): boolean => {
+  for (let i in obj) {
+    return false;
+  }
+  return true;
 };

@@ -17,7 +17,15 @@
     "camelcase": 0,
     "import/extensions": 0,
     "@typescript-eslint/no-redeclare": 0,
-    "no-unused-vars": "warn"
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "warn", // or "error"
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ]
   },
   "ignorePatterns": ["jest.config.js"],
   "settings": {
