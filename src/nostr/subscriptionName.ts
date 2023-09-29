@@ -2,7 +2,7 @@ import { Debugger } from 'debug';
 import type { NDKFilter, NostrEvent } from '@nostr-dev-kit/ndk';
 
 import { logger } from '../lib/utils';
-import { Context } from '@type/request';
+import outbox from '@services/outbox';
 
 const log: Debugger = logger.extend('nostr:subscriptionName');
 
@@ -18,11 +18,11 @@ const filter: NDKFilter = {
   // limit: null,
 };
 
-const getHandler = (ctx: Context): ((event: NostrEvent) => void) => {
+const getHandler = (): ((event: NostrEvent) => void) => {
   return (event: NostrEvent) => {
     log('******* Received event: *******');
     log(event.content);
-    ctx.outbox.publish(event);
+    outbox.publish(event);
   };
 };
 

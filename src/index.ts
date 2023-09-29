@@ -1,54 +1,21 @@
-import NDK, { NDKPrivateKeySigner, type NDKRelay } from '@nostr-dev-kit/ndk';
 import app from './app';
 import path from 'path';
 import { Debugger } from 'debug';
 import express, { Router } from 'express';
 import * as middlewares from './lib/middlewares';
-import { PrismaClient } from '@prisma/client';
-import { EmptyRoutesError, setUpRoutes, setUpSubscriptions } from '@lib/utils';
-import { OutboxService } from '@services/outbox/Outbox';
+import { EmptyRoutesError, setUpRoutes } from '@lib/utils';
 import { Context, ExtendedRequest } from '@type/request';
+import outbox from '@services/outbox';
 import 'websocket-polyfill';
 
 import { logger } from './lib/utils';
+import prisma from '@services/prisma';
 
 const port = process.env.PORT || 8000;
 
 const log: Debugger = logger.extend('index');
-const warn: Debugger = log.extend('warn');
 
-// Instantiate prisma client
-log('Instantiate prisma');
-const prisma = new PrismaClient({
-  log: [{ level: 'query', emit: 'event' }],
-});
-
-// Instantiate ndk
-log('Instantiate NDK');
-const ndk = new NDK({
-  explicitRelayUrls: process.env.NOSTR_RELAYS?.split(','),
-  signer: new NDKPrivateKeySigner(process.env.NOSTR_PRIVATE_KEY),
-});
-
-const ctx: Context = {
-  prisma,
-  outbox: new OutboxService(ndk),
-};
-
-log('Subscribing...');
-const subscribed = setUpSubscriptions(ctx, ndk, path.join(__dirname, 'nostr'));
-
-if (null === subscribed) {
-  throw new Error('Error setting up subscriptions');
-}
-
-ndk.pool.on('relay:connect', (relay: NDKRelay) => {
-  log('Connected to Relay', relay.url);
-});
-
-ndk.on('error', (err) => {
-  log('Error connecting to Relay', err);
-});
+const ctx: Context = { prisma, outbox };
 
 // Generate routes
 log('Setting up routes...');
@@ -87,7 +54,3 @@ if (startExpress) {
     log(`Server is running on port ${port}`);
   });
 }
-
-// Connect to Nostr
-log('Connecting to Nostr...');
-ndk.connect().catch((error) => warn('Error connecting to nostr: %o', error));

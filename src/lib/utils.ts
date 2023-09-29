@@ -4,7 +4,6 @@ import { globSync } from 'glob';
 import NDK from '@nostr-dev-kit/ndk';
 
 import Path from 'path';
-import { Context } from '@type/request';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
@@ -129,11 +128,7 @@ export const setUpRoutes = (router: Router, path: string): Router => {
   return router;
 };
 
-export const setUpSubscriptions = (
-  ctx: Context,
-  ndk: NDK,
-  path: string,
-): NDK | null => {
+export const setUpSubscriptions = (ndk: NDK, path: string): NDK | null => {
   const allFiles = filesWithExtensionsWithoutExtensions(path, ['js', 'ts']);
   const duplicates = findDuplicates(allFiles);
 
@@ -153,7 +148,7 @@ export const setUpSubscriptions = (
         .subscribe(filter, {
           closeOnEose: false,
         })
-        .on('event', getHandler(ctx, 0));
+        .on('event', getHandler(0));
 
       log(`Created ${matches.groups.name} subscription`);
     } else {
