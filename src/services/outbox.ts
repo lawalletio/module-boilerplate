@@ -52,10 +52,15 @@ class OutboxService {
     ndkEvent.publish();
     return 'Published Outbox!';
   }
+
+  async getEvent(id: string): Promise<NDKEvent | null> {
+    return this.ndk.fetchEvent(id);
+  }
 }
 
 export interface Outbox {
   publish(event: NostrEvent): string;
+  getEvent(id: string): Promise<NDKEvent | null>;
 }
 
 const outbox = new OutboxService();
