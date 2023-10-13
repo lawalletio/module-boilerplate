@@ -25,8 +25,9 @@ log('Instantiate NDK');
 const readNDK = getReadNDK();
 log('Subscribing...');
 const subscribed = setUpSubscriptions(
+  ctx,
   readNDK,
-  path.join(__dirname, '../nostr'),
+  path.join(__dirname, './nostr'),
 );
 
 if (null === subscribed) {
