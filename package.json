@@ -31,7 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "@nostr-dev-kit/ndk": "^0.8.23",
-    "@prisma/client": "5.2.0",
+    "@prisma/client": "5.5.2",
     "@types/cors": "^2.8.13",
     "@types/morgan": "^1.9.4",
     "cors": "^2.8.5",
@@ -66,7 +66,7 @@
     "jest": "^29.6.2",
     "nodemon": "^3.0.1",
     "prettier": "^3.0.1",
-    "prisma": "^5.2.0",
+    "prisma": "^5.5.2",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.1",
     "typescript": "^5.1.6"
