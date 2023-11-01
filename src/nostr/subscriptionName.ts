@@ -13,8 +13,8 @@ const filter: NDKFilter = {
   // '#e': null,
   // '#p': null,
   // '#a': null,
-  since: Math.round(Date.now() / 1000) - 86000,
-  until: Math.round(Date.now() / 1000) + 86000,
+  since: Math.floor(Date.now() / 1000) - 86000,
+  until: Math.floor(Date.now() / 1000) + 86000,
   // limit: null,
 };
 
