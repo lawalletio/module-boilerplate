@@ -1,8 +1,10 @@
 import NDK, { NDKEvent, NostrEvent } from '@nostr-dev-kit/ndk';
 
 import { nowInSeconds, requiredEnvVar } from '@lib/utils';
+import { Kind, getTagValue } from '@lib/event';
 
-const tagName = (fileName: string) => `lastHandled:${fileName}`;
+const PUBLISH_INTERVAL = 60000; // 1 minute
+const tagName = (fileName: string): string => `lastHandled:${fileName}`;
 
 function publishLastHandled(ndk: NDK, tracker: LastHandledTracker): void {
   if (ndk.pool.stats().disconnected) {
@@ -16,7 +18,7 @@ function publishLastHandled(ndk: NDK, tracker: LastHandledTracker): void {
     const event: NDKEvent = new NDKEvent(ndk, {
       content: lastHandled.toString(),
       created_at: nowInSeconds(),
-      kind: 31111,
+      kind: Kind.PARAMETRIZED_REPLACEABLE,
       pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
       tags: [['d', tagName(name)]],
     });
@@ -42,7 +44,7 @@ export default class LastHandledTracker {
     for (let i = 0; i < handlerNames.length; ++i) {
       this.indexes[handlerNames[i]] = i;
     }
-    setInterval(publishLastHandled, 60000, writeNDK, this);
+    setInterval(publishLastHandled, PUBLISH_INTERVAL, writeNDK, this);
   }
 
   public get(name: string): number {
@@ -75,10 +77,7 @@ export default class LastHandledTracker {
       this.readNDK
         .subscribe(filter, { closeOnEose: true })
         .on('event', (event: NostrEvent) => {
-          const tag: string[] | undefined = event.tags.find(
-            (t) => t[0] === 'd',
-          );
-          const dTagValue = tag?.at(1);
+          const dTagValue = getTagValue(event, 'd');
           if (!dTagValue) {
             return;
           }

@@ -155,7 +155,7 @@ export const setUpSubscriptions = async (
 
   allFiles.forEach(async (file) => {
     const matches = file.match(/^(?<name>[^/]*)$/i);
-    const lastHandled: number = lastHandledTracker.get(file);
+    const lastHandled: number | undefined = lastHandledTracker.get(file);
 
     if (matches?.groups) {
       let { filter, getHandler } = await require(Path.resolve(path, file));
