@@ -8,7 +8,13 @@ import {
   verifySignature,
 } from 'nostr-tools';
 
-import { logger, nowInSeconds, requiredEnvVar, requiredProp } from '@lib/utils';
+import {
+  jsonStringify,
+  logger,
+  nowInSeconds,
+  requiredEnvVar,
+  requiredProp,
+} from '@lib/utils';
 
 import {
   Cipher,
@@ -108,7 +114,7 @@ export function responseEvent(
   return {
     pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
     created_at: nowInSeconds(),
-    kind: 21111,
+    kind: Kind.EPHEMERAL,
     tags,
     content,
   };
@@ -138,19 +144,19 @@ export function validateDelegationConditions(
 
     if (null !== mKind) {
       if (null === kind) {
-        kind = parseInt(mKind.groups?.kind ?? '', 10);
+        kind = parseInt(mKind.groups!.kind, 10);
       } else {
         return null;
       }
     } else if (null !== mSince) {
       if (null === since) {
-        since = parseInt(mSince.groups?.ts ?? '', 10);
+        since = parseInt(mSince.groups!.ts, 10);
       } else {
         return null;
       }
     } else if (null !== mUntil) {
       if (null === until) {
-        until = parseInt(mUntil.groups?.ts ?? '', 10);
+        until = parseInt(mUntil.groups!.ts, 10);
       } else {
         return null;
       }
@@ -180,9 +186,13 @@ export function validateDelegation(
   delegatorPubKey: string,
   delegationConditions: string,
   delegationToken: string,
+  kind?: number,
 ): boolean {
-  const event = {
-    kind: 1112,
+  if (!kind) {
+    kind = Kind.REGULAR;
+  }
+  const fakeEvent = {
+    kind,
     tags: [
       ['delegation', delegatorPubKey, delegationConditions, delegationToken],
     ],
@@ -192,7 +202,7 @@ export function validateDelegation(
     id: '',
     sig: '',
   };
-  return nip26.getDelegator(event) === delegatorPubKey;
+  return nip26.getDelegator(fakeEvent) === delegatorPubKey;
 }
 
 /**
@@ -269,10 +279,10 @@ function doDecryptNip04Like(keyHex: string, message: string): string {
   const decipher: Decipher = createDecipheriv(
     'aes128',
     Buffer.from(keyHex, 'hex'),
-    Buffer.from(re.groups?.iv ?? '', 'base64'),
+    Buffer.from(re.groups!.iv, 'base64'),
   );
   return Buffer.from([
-    ...decipher.update(Buffer.from(re.groups?.ciphertext ?? '', 'base64')),
+    ...decipher.update(Buffer.from(re.groups!.ciphertext, 'base64')),
     ...decipher.final(),
   ]).toString('utf8');
 }
@@ -409,15 +419,12 @@ export async function buildMultiNip04Event(
     pubkey: senderPubKeyHex,
     created_at: nowInSeconds(),
     tags: receiverPubKeysHex.map((pk: string) => ['p', pk]),
-    content: JSON.stringify(
-      {
-        mac: macBase64,
-        enc: encryptedContentNip04Like,
-        key: receiverPubKeysHexToNip04RandomMessageKey,
-        alg: 'sha256:nip-04:nip-04',
-      },
-      (_, v) => (typeof v === 'bigint' ? String(v) : v),
-    ),
+    content: jsonStringify({
+      mac: macBase64,
+      enc: encryptedContentNip04Like,
+      key: receiverPubKeysHexToNip04RandomMessageKey,
+      alg: 'sha256:nip-04:nip-04',
+    }),
   };
 }
 
@@ -522,10 +529,9 @@ export async function parseMultiNip04Event(
   receiverPubKeyHex: string,
 ): Promise<string> {
   if (
-    !event.tags.some(
-      (tag: string[]) =>
-        (tag[0] ?? null) === 'p' && (tag[1] ?? null) === receiverPubKeyHex,
-    )
+    !event.tags
+      .filter((t) => 'p' === t[0])
+      .some((t) => t[1] === receiverPubKeyHex)
   ) {
     throw new Error('Receiver not in receivers list');
   }
@@ -551,7 +557,7 @@ export async function parseMultiNip04Event(
   if (typeof rawContent.enc !== 'string') {
     throw new Error('Malformed event content, "enc" should be a string');
   }
-  if (typeof rawContent.key !== 'object') {
+  if (typeof rawContent.key !== 'object' || null === rawContent.key) {
     throw new Error('Malformed event content, "key" should be an object');
   }
   if (typeof rawContent.alg !== 'string') {
@@ -565,7 +571,7 @@ export async function parseMultiNip04Event(
   }
 
   if (
-    !Object.entries(rawContent.key ?? {}).every(
+    !Object.entries(rawContent.key).every(
       (entry: [string, any]): boolean =>
         typeof entry[1] === 'string' && /^[^?]*\?iv=.*$/.test(entry[1]),
     )

@@ -217,3 +217,9 @@ export const isEmpty = (obj: object): boolean => {
   }
   return true;
 };
+
+export function jsonStringify(value: any): string {
+  return JSON.stringify(value, (_, v) =>
+    typeof v === 'bigint' ? String(v) : v,
+  );
+}
