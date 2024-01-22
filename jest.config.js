@@ -6,7 +6,7 @@ module.exports = {
     '<rootDir>/src/**/*.ts',
   ],
   coverageDirectory: '.coverage',
-  coverageProvider: 'v8',
+  coverageProvider: 'babel',
   moduleNameMapper: {
     "^@constants/(.*)$": '<rootDir>/src/constants/$1',
     "^@lib/(.*)$": '<rootDir>/src/lib/$1',
@@ -28,6 +28,6 @@ module.exports = {
     '<rootDir>/dist/',
   ],
   transform: {
-    '\\.ts$': '@swc/jest',
+    '\\.ts$': 'ts-jest',
   },
 };

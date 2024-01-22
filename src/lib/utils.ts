@@ -2,31 +2,35 @@ import debug from 'debug';
 import { Router } from 'express';
 import { globSync } from 'glob';
 import NDK, { NostrEvent } from '@nostr-dev-kit/ndk';
+import { v4 as uuidv4 } from 'uuid';
 
 import Path from 'path';
 import { Context } from '@type/request';
+export const logger: debug.Debugger = debug(process.env.MODULE_NAME || '');
 import LastHandledTracker from '@lib/lastHandled';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
-export const logger: debug.Debugger = debug(process.env.MODULE_NAME || '');
+export const uuidRegex: RegExp =
+  /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const log: debug.Debugger = logger.extend('lib:utils');
 const warn: debug.Debugger = logger.extend('lib:utils:warn');
 const CREATED_AT_TOLERANCE: number = 2 * 180;
+const sAlpha: string =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+const sAlphaLength: bigint = BigInt(sAlpha.length);
 let lastHandledTracker: LastHandledTracker;
 
 export class EmptyRoutesError extends Error {}
 export class DuplicateRoutesError extends Error {}
 
 const methods: RouteMethod[] = ['get', 'post', 'put', 'patch', 'delete'];
-const filesWithExtensionsWithoutExtensions = (
+
+function filesWithExtensionsWithoutExtensions(
   path: string,
   extensions: string[],
-) => {
-  const extensionsSet = new Set(
-    extensions.map((extension) => `.${extension.toLowerCase()}`),
-  );
-
+): string[] {
+  const extensionsSet = new Set(extensions.map((e) => `.${e.toLowerCase()}`));
   const allFiles: string[] = [];
 
   globSync('*', {
@@ -36,11 +40,11 @@ const filesWithExtensionsWithoutExtensions = (
     nocase: true,
     nodir: true,
   }).map((value) => {
-    const filePath = value.relative();
-    const fileExtension = Path.extname(filePath).toLowerCase();
+    const filePath: string = value.relative();
+    const fileExtension: string = Path.extname(filePath).toLowerCase();
 
     if (extensionsSet.has(fileExtension)) {
-      const fileBase = Path.basename(filePath);
+      const fileBase: string = Path.basename(filePath);
 
       allFiles.push(
         Path.join(
@@ -52,9 +56,9 @@ const filesWithExtensionsWithoutExtensions = (
   });
 
   return allFiles;
-};
+}
 
-const findDuplicates = (values: string[]) => {
+function findDuplicates(values: string[]): string[] {
   const counter: { [key: string]: number } = {};
   const duplicates: string[] = [];
 
@@ -68,9 +72,9 @@ const findDuplicates = (values: string[]) => {
   }
 
   return duplicates;
-};
+}
 
-export const setUpRoutes = (router: Router, path: string): Router => {
+export function setUpRoutes(router: Router, path: string): Router {
   const allFiles = filesWithExtensionsWithoutExtensions(path, ['js', 'ts']);
   const duplicates = findDuplicates(allFiles);
 
@@ -130,14 +134,14 @@ export const setUpRoutes = (router: Router, path: string): Router => {
   });
 
   return router;
-};
+}
 
-export const setUpSubscriptions = async (
+export async function setUpSubscriptions(
   ctx: Context,
   readNdk: NDK,
   writeNDK: NDK,
   path: string,
-): Promise<NDK | null> => {
+): Promise<NDK | null> {
   const allFiles = filesWithExtensionsWithoutExtensions(path, ['js', 'ts']);
   const duplicates = findDuplicates(allFiles);
 
@@ -155,7 +159,7 @@ export const setUpSubscriptions = async (
 
   allFiles.forEach(async (file) => {
     const matches = file.match(/^(?<name>[^/]*)$/i);
-    const lastHandled: number | undefined = lastHandledTracker.get(file);
+    const lastHandled: number = lastHandledTracker.get(file);
 
     if (matches?.groups) {
       let { filter, getHandler } = await require(Path.resolve(path, file));
@@ -181,6 +185,7 @@ export const setUpSubscriptions = async (
             );
           }
         });
+
       log(`Created ${matches.groups.name} subscription`);
     } else {
       warn(
@@ -190,33 +195,101 @@ export const setUpSubscriptions = async (
   });
 
   return readNdk;
-};
+}
 
-export const requiredEnvVar = (key: string): string => {
+export function requiredEnvVar(key: string): string {
   const envVar = process.env[key];
   if (undefined === envVar) {
     throw new Error(`Environment process ${key} must be defined`);
   }
   return envVar;
-};
+}
 
-export const requiredProp = <T>(obj: any, key: string): T => {
+export function requiredProp<T>(obj: any, key: string): T {
   if (obj[key] === undefined) {
     throw new Error(`Expected ${key} of ${obj} to be defined`);
   }
   return obj[key];
-};
+}
 
-export const nowInSeconds = (): number => {
+export function nowInSeconds(): number {
   return Math.floor(Date.now() / 1000);
-};
+}
 
-export const isEmpty = (obj: object): boolean => {
+export function isEmpty(obj: object): boolean {
   for (let i in obj) {
     return false;
   }
   return true;
-};
+}
+
+export function shuffled<T>(array: Array<T>): Array<T> {
+  let result: Array<T> = Array.from(array);
+  for (let i = result.length - 1; 0 < i; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+export function uuid2suuid(uuid: string): string | null {
+  if (!uuid.match(uuidRegex)) {
+    return null;
+  }
+
+  let n: bigint = uuid
+    .replace(/-/g, '')
+    .match(/../g)!
+    .map((hexPair: string) => BigInt(parseInt(hexPair, 16)))
+    .reduce((acc: bigint, curr: bigint) => acc * 256n + curr);
+  let suuid: string = '';
+  do {
+    [suuid, n] = [sAlpha[Number(n % sAlphaLength)] + suuid, n / sAlphaLength];
+  } while (n);
+  return suuid.padStart(22, sAlpha[0]);
+}
+
+export function suuid2uuid(suuid: string): string | null {
+  const chars: string[] | null = suuid.match(/./g);
+  if (!chars || !chars.every((c) => sAlpha.includes(c))) {
+    return null;
+  }
+
+  const n: bigint = chars
+    .map((char: string) => BigInt(sAlpha.indexOf(char)))
+    .reduce((acc: bigint, curr: bigint) => acc * sAlphaLength + curr, 0n);
+  if (0xffffffffffffffffffffffffffffffffn < n) {
+    return null;
+  }
+  const uuid: string = n.toString(16).padStart(32, '0');
+
+  return (
+    uuid.substring(0, 8) +
+    '-' +
+    uuid.substring(8, 12) +
+    '-' +
+    uuid.substring(12, 16) +
+    '-' +
+    uuid.substring(16, 20) +
+    '-' +
+    uuid.substring(20, 32)
+  );
+}
+
+export function generateSuuid(): string {
+  return uuid2suuid(uuidv4()) as string;
+}
+
+export function jsonParseOrNull(
+  text: string,
+  reviver?: (this: any, key: string, value: any) => any,
+): any {
+  try {
+    return JSON.parse(text, reviver);
+  } catch (e) {
+    return null;
+  }
+}
 
 export function jsonStringify(value: any): string {
   return JSON.stringify(value, (_, v) =>

@@ -10,3 +10,7 @@ export interface Context {
 export interface ExtendedRequest extends Request {
   context: Context;
 }
+
+export type RestHandler = {
+  (req: ExtendedRequest, res: Response): Promise<void>;
+};

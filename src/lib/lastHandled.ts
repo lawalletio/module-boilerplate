@@ -1,7 +1,6 @@
 import NDK, { NDKEvent, NostrEvent } from '@nostr-dev-kit/ndk';
 
 import { nowInSeconds, requiredEnvVar } from '@lib/utils';
-import { Kind, getTagValue } from '@lib/event';
 
 const PUBLISH_INTERVAL = 60000; // 1 minute
 const tagName = (fileName: string): string => `lastHandled:${fileName}`;
@@ -18,7 +17,7 @@ function publishLastHandled(ndk: NDK, tracker: LastHandledTracker): void {
     const event: NDKEvent = new NDKEvent(ndk, {
       content: lastHandled.toString(),
       created_at: nowInSeconds(),
-      kind: Kind.PARAMETRIZED_REPLACEABLE,
+      kind: 31111,
       pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
       tags: [['d', tagName(name)]],
     });
@@ -77,7 +76,7 @@ export default class LastHandledTracker {
       this.readNDK
         .subscribe(filter, { closeOnEose: true })
         .on('event', (event: NostrEvent) => {
-          const dTagValue = getTagValue(event, 'd');
+          const dTagValue = event.tags.find((t) => t[0] === 'd')?.at(1);
           if (!dTagValue) {
             return;
           }

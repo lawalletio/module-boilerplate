@@ -1,8 +1,5 @@
-import NDK, {
-  NDKEvent,
-  NDKSubscription,
-  mockEventPublish,
-} from '@nostr-dev-kit/ndk';
+import NDK, { NDKEvent, NDKSubscription } from '@nostr-dev-kit/ndk';
+import { mockEventPublish } from '../../__mocks__/@nostr-dev-kit/ndk';
 import LastHandledTracker from '@lib/lastHandled';
 import EventEmitter from 'events';
 
