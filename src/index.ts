@@ -2,17 +2,22 @@ import app from './app';
 import path from 'path';
 import { Debugger } from 'debug';
 import express, { Router } from 'express';
-import * as middlewares from './lib/middlewares';
-import { EmptyRoutesError, setUpRoutes, setUpSubscriptions } from '@lib/utils';
+import * as middlewares from '@lib/middlewares';
+import {
+  EmptyRoutesError,
+  logger,
+  setUpRoutes,
+  setUpSubscriptions,
+} from '@lib/utils';
 import { Context, ExtendedRequest } from '@type/request';
 import 'websocket-polyfill';
 
-import { logger } from '@lib/utils';
 import { getReadNDK, getWriteNDK } from '@services/ndk';
 import { NDKRelay } from '@nostr-dev-kit/ndk';
 import { OutboxService } from '@services/outbox';
 import { getPrisma } from '@services/prisma';
 
+/* istanbul ignore next */
 const port = process.env.PORT || 8000;
 
 const log: Debugger = logger.extend('index');

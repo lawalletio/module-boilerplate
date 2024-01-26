@@ -1,3 +1,5 @@
+import EventEmitter from 'events';
+
 export const mockEventPublish = jest.fn();
 
 export const NDKEvent = jest.fn().mockImplementation(() => {
@@ -17,4 +19,9 @@ export const NDKRelay = jest.fn(() => mockedNDKRelay);
 
 export const NDKRelaySet = jest.fn();
 
-export default jest.fn();
+export const mockedNDK = {
+  connect: jest.fn().mockResolvedValue(''),
+  on: jest.fn(),
+  pool : {on: jest.fn()},
+};
+export default jest.fn(() => mockedNDK);
