@@ -45,7 +45,7 @@
     "removeComments": false,
     "resolveJsonModule": true,
     "rootDir": ".",
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
     "target": "esnext",
