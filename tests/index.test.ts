@@ -1,19 +1,26 @@
-import { Router } from 'express';
+import {
+  Application,
+  Request,
+  Response,
+  RequestHandler,
+  Router,
+} from 'express';
 import NDK from '@nostr-dev-kit/ndk';
 
 describe('Entrypoint', () => {
   beforeEach(() => {
     jest.resetModules();
-    jest.mock('../src/app', () => {
+    jest.mock('@src/app', () => {
       return {
         use: jest.fn(),
-        listen: jest.fn((_port, fn) => {
+        listen: jest.fn((_port, fn: () => void) => {
           fn();
         }),
       };
     });
     jest.mock('@lib/utils', () => {
-      const ogModule = jest.requireActual('@lib/utils');
+      const ogModule =
+        jest.requireActual<typeof import('@lib/utils')>('@lib/utils');
       return {
         __esModule: true,
         ...ogModule,
@@ -24,12 +31,18 @@ describe('Entrypoint', () => {
   });
 
   it('should start normally', async () => {
-    const { setUpRoutes, setUpSubscriptions } = require('@lib/utils');
-    const { mockedNDK } = require('../__mocks__/@nostr-dev-kit/ndk');
-    const app = require('../src/app');
+    const { setUpRoutes, setUpSubscriptions } =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('@lib/utils') as typeof import('@lib/utils');
+    const { mockedNDK } =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('@mocks/@nostr-dev-kit/ndk') as typeof import('@mocks/@nostr-dev-kit/ndk');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const app: Application = require('@src/app') as Application;
     const mockRouter = {
-      use: jest.fn().mockImplementation((fn) => {
-        fn({}, null, () => {});
+      use: jest.fn().mockImplementation((fn: RequestHandler) => {
+        fn({} as Request, null as unknown as Response, () => {});
+        return mockRouter;
       }),
     } as unknown as Router;
     jest.mocked(setUpRoutes).mockReturnValue(mockRouter);
@@ -38,14 +51,16 @@ describe('Entrypoint', () => {
     mockedNDK.pool.on.mockImplementation(
       (event: string, fn: (arg0: { url: string }) => void) => {
         if ('relay:connect' === event) {
-          connectFn = () => fn({ url: '' });
+          connectFn = () => {
+            fn({ url: '' });
+          };
         } else {
           fn({ url: '' });
         }
       },
     );
     mockedNDK.on.mockImplementation(
-      (event: string, fn: (arg0: { url: string }) => void) => {
+      (_event: string, fn: (arg0: { url: string }) => void) => {
         fn({ url: '' });
       },
     );
@@ -60,22 +75,27 @@ describe('Entrypoint', () => {
   });
 
   it('should throw error when setting up subscriptions failed', async () => {
-    const { setUpRoutes, setUpSubscriptions } = require('@lib/utils');
-    const { mockedNDK } = require('../__mocks__/@nostr-dev-kit/ndk');
+    const { setUpRoutes, setUpSubscriptions } =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('@lib/utils') as typeof import('@lib/utils');
+    const { mockedNDK } =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('@mocks/@nostr-dev-kit/ndk') as typeof import('@mocks/@nostr-dev-kit/ndk');
     const mockRouter = {
-      use: jest.fn().mockImplementation((fn) => {
-        fn({}, null, () => {});
+      use: jest.fn().mockImplementation((fn: RequestHandler) => {
+        fn({} as Request, null as unknown as Response, () => {});
+        return mockRouter;
       }),
     } as unknown as Router;
     jest.mocked(setUpSubscriptions).mockResolvedValueOnce(null);
     jest.mocked(setUpRoutes).mockReturnValue(mockRouter);
-    let connectFn;
+    let connectFn: Promise<void> | undefined;
     mockedNDK.pool.on.mockImplementation(
-      (event: string, fn: (arg0: { url: string }) => void) => {
+      (event: string, fn: (arg0: { url: string }) => Promise<void>) => {
         if ('relay:connect' === event) {
           connectFn = fn({ url: '' });
         } else {
-          fn({ url: '' });
+          void fn({ url: '' });
         }
       },
     );
@@ -84,20 +104,21 @@ describe('Entrypoint', () => {
     require('../src/index');
     await Promise.resolve();
 
-    expect(connectFn).rejects.toEqual(
+    await expect(connectFn).rejects.toEqual(
       new Error('Error setting up subscriptions'),
     );
     expect(setUpSubscriptions).toHaveBeenCalled();
   });
 
   it('should not start express if routes are empty', async () => {
-    const {
-      setUpRoutes,
-      setUpSubscriptions,
-      EmptyRoutesError,
-    } = require('@lib/utils');
-    const { mockedNDK } = require('../__mocks__/@nostr-dev-kit/ndk');
-    const app = require('../src/app');
+    const { setUpRoutes, setUpSubscriptions, EmptyRoutesError } =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('@lib/utils') as typeof import('@lib/utils');
+    const { mockedNDK } =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('@mocks/@nostr-dev-kit/ndk') as typeof import('@mocks/@nostr-dev-kit/ndk');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const app: Application = require('@src/app') as Application;
     jest.mocked(setUpRoutes).mockImplementation(() => {
       throw new EmptyRoutesError();
     });
@@ -106,14 +127,16 @@ describe('Entrypoint', () => {
     mockedNDK.pool.on.mockImplementation(
       (event: string, fn: (arg0: { url: string }) => void) => {
         if ('relay:connect' === event) {
-          connectFn = () => fn({ url: '' });
+          connectFn = () => {
+            fn({ url: '' });
+          };
         } else {
           fn({ url: '' });
         }
       },
     );
     mockedNDK.on.mockImplementation(
-      (event: string, fn: (arg0: { url: string }) => void) => {
+      (_event: string, fn: (arg0: { url: string }) => void) => {
         fn({ url: '' });
       },
     );
@@ -127,8 +150,10 @@ describe('Entrypoint', () => {
     expect(app.listen).not.toHaveBeenCalled();
   });
 
-  it('should throw error when setting up routes failed forn unknown reasons', async () => {
-    const { setUpRoutes, setUpSubscriptions } = require('@lib/utils');
+  it('should throw error when setting up routes failed forn unknown reasons', () => {
+    const { setUpRoutes, setUpSubscriptions } =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('@lib/utils') as typeof import('@lib/utils');
     jest.mocked(setUpSubscriptions).mockResolvedValueOnce(new NDK());
     jest.mocked(setUpRoutes).mockImplementation(() => {
       throw new Error();
@@ -136,22 +161,29 @@ describe('Entrypoint', () => {
 
     expect(() => {
       require('../src/index');
-    }).toThrow();
+    }).toThrow(Error);
   });
 
-  it('should catch uncaught exeptions', async () => {
-    const { setUpRoutes, setUpSubscriptions } = require('@lib/utils');
+  it('should catch uncaught exeptions', () => {
+    const { setUpRoutes, setUpSubscriptions } =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('@lib/utils') as typeof import('@lib/utils');
     jest.mocked(setUpSubscriptions).mockResolvedValueOnce(new NDK());
     const mockRouter = {
-      use: jest.fn().mockImplementation((fn) => {
-        fn({}, null, () => {});
+      use: jest.fn().mockImplementation((fn: RequestHandler) => {
+        fn({} as Request, null as unknown as Response, () => {});
+        return mockRouter;
       }),
     } as unknown as Router;
-    jest.mocked(setUpRoutes).mockReturnValue(mockRouter);
-    const a: any = (_event: string, listener: (arg0: string) => void) => {
-      listener('');
+    const handler = (
+      _event: string | symbol,
+      listener: NodeJS.UncaughtExceptionListener,
+    ) => {
+      listener(new Error(), {} as NodeJS.UncaughtExceptionOrigin);
+      return process;
     };
-    jest.spyOn(process, 'on').mockImplementation(a);
+    jest.mocked(setUpRoutes).mockReturnValue(mockRouter);
+    jest.spyOn(process, 'on').mockImplementation(handler);
     jest.spyOn(process, 'exit').mockImplementation();
 
     require('../src/index');

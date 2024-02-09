@@ -3,6 +3,7 @@ import type { NDKFilter, NostrEvent } from '@nostr-dev-kit/ndk';
 
 import { logger } from '../lib/utils';
 import { Context } from '@type/request';
+import { EventHandler } from '@type/nostr';
 
 const log: Debugger = logger.extend('nostr:subscriptionName');
 
@@ -18,11 +19,11 @@ const filter: NDKFilter = {
   // limit: null,
 };
 
-const getHandler = (ctx: Context): ((event: NostrEvent) => void) => {
-  return (event: NostrEvent) => {
+const getHandler = (ctx: Context): EventHandler => {
+  return async (event: NostrEvent): Promise<void> => {
     log('******* Received event: *******');
     log(event.content);
-    ctx.outbox.publish(event);
+    await ctx.outbox.publish(event);
   };
 };
 

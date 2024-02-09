@@ -3,14 +3,14 @@ import { getHandler } from '@nostr/subscriptionName';
 import { Context } from '@type/request';
 
 describe('Nostr handler', () => {
-  it('should handle received evenshould handle received eventt', () => {
+  it('should handle received evenshould handle received event', async () => {
     const context: Context = {
       outbox: { publish: jest.fn() },
     } as unknown as Context;
     const event = {} as NostrEvent;
 
     const handler = getHandler(context);
-    handler(event);
+    await handler(event);
 
     expect(context.outbox.publish).toHaveBeenCalledWith(event);
   });

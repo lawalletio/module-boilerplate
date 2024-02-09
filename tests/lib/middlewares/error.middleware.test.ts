@@ -1,4 +1,5 @@
 import { errorHandler } from '@lib/middlewares/error.middleware';
+import { ErrorResponseContract } from '@src/type/responses';
 import { NextFunction, Request, Response } from 'express';
 
 describe('Error middleware', () => {
@@ -9,7 +10,7 @@ describe('Error middleware', () => {
     const mockRes = {
       status: jest.fn().mockReturnThis(),
       send: jest.fn(),
-    } as unknown as Response;
+    } as unknown as Response<ErrorResponseContract>;
 
     errorHandler(e, {} as Request, mockRes, {} as NextFunction);
 

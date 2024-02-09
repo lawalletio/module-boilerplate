@@ -1,4 +1,4 @@
-import app from './app';
+import app from '@src/app';
 import path from 'path';
 import { Debugger } from 'debug';
 import express, { Router } from 'express';
@@ -18,7 +18,7 @@ import { OutboxService } from '@services/outbox';
 import { getPrisma } from '@services/prisma';
 
 /* istanbul ignore next */
-const port = process.env.PORT || 8000;
+const port = process.env['PORT'] || 8000;
 
 const log: Debugger = logger.extend('index');
 const warn: Debugger = log.extend('warn');
@@ -84,7 +84,7 @@ try {
 
 if (startExpress) {
   // Setup context
-  routes.use((req, res, next) => {
+  routes.use((req, _res, next) => {
     (req as ExtendedRequest).context = ctx;
     next();
   });

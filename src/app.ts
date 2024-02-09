@@ -1,5 +1,5 @@
 import { Debugger } from 'debug';
-import express from 'express';
+import express, { Application } from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -10,7 +10,7 @@ const log: Debugger = logger.extend('app');
 
 // Instantiate expresss
 log('Instantiate express');
-const app = express();
+const app: Application = express();
 
 // Header Middleware
 app.use(morgan('dev'));

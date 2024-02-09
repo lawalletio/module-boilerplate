@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { Path, globSync } from 'glob';
 
 import {
   DuplicateRoutesError,
@@ -20,11 +19,14 @@ import {
 import { Context } from '@type/request';
 import NDK, { NDKSubscription } from '@nostr-dev-kit/ndk';
 import EventEmitter from 'events';
+import { Path, globSync } from 'glob';
 import { v4 } from 'uuid';
 
 const now: number = 1231006505000;
 jest.useFakeTimers({ now });
-jest.mock('uuid');
+jest.mock('uuid', () => ({
+  v4: jest.fn(),
+}));
 jest.mock('glob', () => {
   const ogModule = jest.requireActual<typeof import('glob')>('glob');
   return {
@@ -47,7 +49,7 @@ describe('utils', () => {
         expected: DuplicateRoutesError,
       },
     ])('should throw $expected', ({ files, expected }) => {
-      jest.mocked(globSync).mockReturnValueOnce(files);
+      jest.mocked<typeof globSync>(globSync).mockReturnValueOnce(files);
 
       expect(() => {
         setUpRoutes(Router(), '');
@@ -77,7 +79,7 @@ describe('utils', () => {
         { virtual: true },
       );
       jest
-        .mocked(globSync)
+        .mocked<typeof globSync>(globSync)
         .mockReturnValueOnce([
           globPath('/hello/world/post.ts'),
           globPath('/hello/world/get.ts'),
@@ -92,7 +94,11 @@ describe('utils', () => {
 
       const router: Router = setUpRoutes(Router(), '');
       await Promise.resolve();
-      router.stack[9].route.stack[0].handle(null, mockRes);
+      type PartialLayer = {
+        route: { stack: PartialLayer[] };
+        handle: (arg0: object | null, arg1: object) => void;
+      };
+      (router.stack[9] as PartialLayer).route.stack[0]!.handle(null, mockRes);
 
       expect(router.stack.length).toBe(10);
       expect(router.stack).toEqual(
@@ -101,61 +107,61 @@ describe('utils', () => {
             route: expect.objectContaining({
               methods: { post: true },
               path: '//hello/world',
-            }),
+            }) as PartialLayer['route'],
           }),
           expect.objectContaining({
             route: expect.objectContaining({
               methods: { get: true },
               path: '//hello/world',
-            }),
+            }) as PartialLayer['route'],
           }),
           expect.objectContaining({
             route: expect.objectContaining({
               methods: { put: true },
               path: '//hello/world',
-            }),
+            }) as PartialLayer['route'],
           }),
           expect.objectContaining({
             route: expect.objectContaining({
               methods: { patch: true },
               path: '//hello/world',
-            }),
+            }) as PartialLayer['route'],
           }),
           expect.objectContaining({
             route: expect.objectContaining({
               methods: { delete: true },
               path: '//hello/world',
-            }),
+            }) as PartialLayer['route'],
           }),
           expect.objectContaining({
             route: expect.objectContaining({
               methods: { get: true },
               path: '//hello',
-            }),
+            }) as PartialLayer['route'],
           }),
           expect.objectContaining({
             route: expect.objectContaining({
               methods: { post: true },
               path: '//hello',
-            }),
+            }) as PartialLayer['route'],
           }),
           expect.objectContaining({
             route: expect.objectContaining({
               methods: { put: true },
               path: '//hello',
-            }),
+            }) as PartialLayer['route'],
           }),
           expect.objectContaining({
             route: expect.objectContaining({
               methods: { patch: true },
               path: '//hello',
-            }),
+            }) as PartialLayer['route'],
           }),
           expect.objectContaining({
             route: expect.objectContaining({
               methods: { delete: true },
               path: '//hello',
-            }),
+            }) as PartialLayer['route'],
           }),
         ]),
       );
@@ -166,7 +172,7 @@ describe('utils', () => {
   describe('setUpSubscriptions', () => {
     it('should return null when there are duplicates', async () => {
       jest
-        .mocked(globSync)
+        .mocked<typeof globSync>(globSync)
         .mockReturnValueOnce([globPath('hello.ts'), globPath('hello.ts')]);
 
       const ndk = await setUpSubscriptions(
@@ -197,21 +203,21 @@ describe('utils', () => {
         { virtual: true },
       );
       jest
-        .mocked(globSync)
+        .mocked<typeof globSync>(globSync)
         .mockReturnValueOnce([
           globPath('handler1.ts'),
           globPath('handler2.ts'),
           globPath('Invalid/handler/this.ts'),
         ]);
       const ctx = {} as Context;
+      const mockSub = jest.fn();
       const readNDK = {
-        subscribe: jest.fn() as any,
-      } as NDK;
+        subscribe: mockSub,
+      } as unknown as NDK;
       const writeNDK = {} as NDK;
       const mockSubTracker = new EventEmitter() as unknown as NDKSubscription;
       const mockSubHandler = new EventEmitter() as unknown as NDKSubscription;
-      jest
-        .mocked(readNDK.subscribe)
+      mockSub
         .mockReturnValueOnce(mockSubTracker)
         .mockReturnValue(mockSubHandler);
 
@@ -220,8 +226,8 @@ describe('utils', () => {
         content: '100',
         created_at: now / 1000 + 60,
         kind: 31111,
-        pubkey: process.env.NOSTR_PUBLIC_KEY,
-        tags: [['d', 'lastHandled:/handler1']],
+        pubkey: process.env['NOSTR_PUBLIC_KEY'],
+        tags: [['d', 'lastHandled:handler1']],
       });
       mockSubTracker.emit('eose');
       mockSubHandler.emit('event', {});
@@ -244,17 +250,19 @@ describe('utils', () => {
     });
 
     it('should return existing env var', () => {
-      process.env.REAL_VAR = 'hello';
+      process.env['REAL_VAR'] = 'hello';
 
       expect(requiredEnvVar('REAL_VAR')).toBe('hello');
 
-      delete process.env.REAL_VER;
+      // eslint-disable-next-line
+      delete process.env['REAL_VAR'];
     });
   });
 
   describe('requiredProp', () => {
     it('should fail if no prop found', () => {
       expect(() => {
+        // @ts-expect-error assign to parameter of type never
         requiredProp({}, 'hello');
       }).toThrow(Error);
     });
@@ -304,7 +312,7 @@ describe('utils', () => {
         expected: ['dolor', 'ipsum', 'Lorem'],
       },
     ])('should shuffle correctly', ({ original, rand, expected }) => {
-      for (let n of rand) {
+      for (const n of rand) {
         jest.spyOn(global.Math, 'random').mockReturnValueOnce(n);
       }
 

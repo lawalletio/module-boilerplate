@@ -4,7 +4,7 @@ import { Debugger } from 'debug';
 
 const log: Debugger = logger.extend('services:prisma');
 
-let prisma: PrismaClient;
+let prisma: PrismaClient | undefined;
 
 export function getPrisma(): PrismaClient {
   if (!prisma) {

@@ -1,18 +1,9 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "paths": {
-      "@constants/*": ["./src/constants/*"],
-      "@lib/*": ["./src/lib/*"],
-      "@nostr/*": ["./src/nostr/*"],
-      "@rest/*": ["./src/rest/*"],
-      "@services/*": ["./src/services/*"],
-      "@type/*": ["./src/type/*"]
-    }
-  },
   "include": [
     "./tests/**/*",
     "./src/**/*",
+    "./build.js",
     "./jest.config.js"
   ]
 }

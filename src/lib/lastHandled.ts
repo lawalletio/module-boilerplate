@@ -21,7 +21,7 @@ function publishLastHandled(ndk: NDK, tracker: LastHandledTracker): void {
       pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
       tags: [['d', tagName(name)]],
     });
-    event.publish();
+    void event.publish();
   }
 }
 
@@ -41,13 +41,18 @@ export default class LastHandledTracker {
     );
     this.arr = new Int32Array(sab);
     for (let i = 0; i < handlerNames.length; ++i) {
-      this.indexes[handlerNames[i]] = i;
+      this.indexes[handlerNames[i]!] = i;
     }
-    setInterval(publishLastHandled, PUBLISH_INTERVAL, writeNDK, this);
+    setInterval(publishLastHandled, PUBLISH_INTERVAL, this.writeNDK, this);
   }
 
   public get(name: string): number {
-    return Atomics.load(this.arr, this.indexes[name]);
+    if (undefined === this.indexes[name]) {
+      throw new ReferenceError(
+        `No handler by the name of ${name} being tracked`,
+      );
+    }
+    return Atomics.load(this.arr, this.indexes[name]!);
   }
 
   public hit(name: string, timestamp: number): void {
@@ -56,7 +61,7 @@ export default class LastHandledTracker {
       if (
         Atomics.compareExchange(
           this.arr,
-          this.indexes[name],
+          this.indexes[name]!,
           curr,
           timestamp,
         ) !== curr
@@ -81,7 +86,7 @@ export default class LastHandledTracker {
             return;
           }
           const handlerName = dTagValue.match(/^lastHandled:(?<name>.+)$/)
-            ?.groups?.name;
+            ?.groups?.['name'];
           if (handlerName) {
             this.hit(handlerName, Number(event.content));
           }

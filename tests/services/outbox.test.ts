@@ -1,6 +1,6 @@
 import NDK, { NostrEvent } from '@nostr-dev-kit/ndk';
 import { OutboxService } from '@services/outbox';
-import { mockEventPublish } from '../../__mocks__/@nostr-dev-kit/ndk';
+import { mockEventPublish } from '@mocks/@nostr-dev-kit/ndk';
 
 describe('Outbox service', () => {
   const ndk = new NDK();
@@ -18,7 +18,7 @@ describe('Outbox service', () => {
     mockEventPublish.mockResolvedValueOnce({ size: 0 });
 
     await expect(outbox.publish({} as NostrEvent)).rejects.toEqual(
-      'Did not publish to any relay',
+      new Error('Did not publish to any relay'),
     );
     expect(mockEventPublish).toHaveBeenCalled();
   });
@@ -28,7 +28,7 @@ describe('Outbox service', () => {
     mockEventPublish.mockRejectedValueOnce('');
 
     await expect(outbox.publish({} as NostrEvent)).rejects.toEqual(
-      'Unexpected error publishing event',
+      new Error('Unexpected error publishing event'),
     );
     expect(mockEventPublish).toHaveBeenCalled();
   });

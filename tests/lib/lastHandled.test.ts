@@ -1,30 +1,32 @@
 import NDK, { NDKEvent, NDKSubscription } from '@nostr-dev-kit/ndk';
-import { mockEventPublish } from '../../__mocks__/@nostr-dev-kit/ndk';
 import LastHandledTracker from '@lib/lastHandled';
 import EventEmitter from 'events';
+import { mockEventPublish } from '@mocks/@nostr-dev-kit/ndk';
 
 const now: number = 1231006505000;
 jest.useFakeTimers({ now });
 
+const mockedSub = jest.fn();
 const readNDK: NDK = {
-  subscribe: jest.fn() as any,
-} as NDK;
+  subscribe: mockedSub,
+} as unknown as NDK;
 
+const mockedStats = jest.fn();
 const writeNDK: NDK = {
-  pool: { stats: jest.fn() } as any,
-} as NDK;
+  pool: { stats: mockedStats },
+} as unknown as NDK;
 
 describe('Last Handled', () => {
   beforeEach(() => {
-    jest.mocked(writeNDK.pool.stats).mockReset();
-    jest.mocked(readNDK.subscribe).mockReset();
+    jest.mocked(mockedStats).mockReset();
+    jest.mocked(mockedSub).mockReset();
     jest.clearAllTimers();
   });
 
   describe('empty tracker', () => {
     it('should not publish any event', () => {
       new LastHandledTracker(readNDK, writeNDK, []);
-      jest.mocked(writeNDK.pool.stats).mockReturnValue({
+      mockedStats.mockReturnValue({
         disconnected: 0,
         total: 1,
         connected: 1,
@@ -43,7 +45,7 @@ describe('Last Handled', () => {
 
       expect(() => {
         tracker.get('');
-      }).toThrowError(RangeError);
+      }).toThrow(ReferenceError);
     });
 
     it('should throw error when hitting', () => {
@@ -51,7 +53,7 @@ describe('Last Handled', () => {
 
       expect(() => {
         tracker.hit('', 10);
-      }).toThrowError(RangeError);
+      }).toThrow(ReferenceError);
     });
   });
 
@@ -62,7 +64,7 @@ describe('Last Handled', () => {
         'handler2',
         'handler3',
       ]);
-      jest.mocked(writeNDK.pool.stats).mockReturnValue({
+      mockedStats.mockReturnValue({
         disconnected: 1,
         total: 1,
         connected: 0,
@@ -82,7 +84,7 @@ describe('Last Handled', () => {
         'handler2',
         'handler3',
       ]);
-      jest.mocked(writeNDK.pool.stats).mockReturnValue({
+      mockedStats.mockReturnValue({
         disconnected: 0,
         total: 1,
         connected: 1,
@@ -102,7 +104,7 @@ describe('Last Handled', () => {
         'handler2',
         'handler3',
       ]);
-      jest.mocked(writeNDK.pool.stats).mockReturnValue({
+      mockedStats.mockReturnValue({
         disconnected: 0,
         total: 1,
         connected: 1,
@@ -155,14 +157,14 @@ describe('Last Handled', () => {
         'handler2',
         'handler3',
       ]);
-      jest.mocked(writeNDK.pool.stats).mockReturnValue({
+      mockedStats.mockReturnValue({
         disconnected: 0,
         total: 1,
         connected: 1,
         connecting: 0,
       });
       const mockSubscribe = new EventEmitter() as unknown as NDKSubscription;
-      jest.mocked(readNDK.subscribe).mockReturnValue(mockSubscribe);
+      mockedSub.mockReturnValue(mockSubscribe);
 
       const fetchLastHandled = tracker.fetchLastHandled();
       mockSubscribe.emit('event', {
@@ -213,13 +215,13 @@ describe('Last Handled', () => {
       expect(writeNDK.pool.stats).toHaveBeenCalledTimes(2);
     });
 
-    it('should store greater timestamps', async () => {
+    it('should store greater timestamps', () => {
       const tracker = new LastHandledTracker(readNDK, writeNDK, [
         'handler1',
         'handler2',
         'handler3',
       ]);
-      jest.mocked(writeNDK.pool.stats).mockReturnValue({
+      mockedStats.mockReturnValue({
         disconnected: 0,
         total: 1,
         connected: 1,
@@ -234,13 +236,13 @@ describe('Last Handled', () => {
       expect(tracker.get('handler1')).toBe(101);
     });
 
-    it('should handle race condition', async () => {
+    it('should handle race condition', () => {
       const tracker = new LastHandledTracker(readNDK, writeNDK, [
         'handler1',
         'handler2',
         'handler3',
       ]);
-      jest.mocked(writeNDK.pool.stats).mockReturnValue({
+      mockedStats.mockReturnValue({
         disconnected: 0,
         total: 1,
         connected: 1,

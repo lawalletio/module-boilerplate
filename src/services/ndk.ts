@@ -11,8 +11,8 @@ const log: Debugger = logger.extend('services:ndk');
 const warn: Debugger = log.extend('warn');
 
 const INACTIVE_TIMEOUT = 10 * 60 * 1000; // 10 minutes
-let writeNDK: NDK;
-let readNDK: NDK;
+let writeNDK: NDK | undefined;
+let readNDK: NDK | undefined;
 
 type TempRelay = {
   relay: NDKRelay;
@@ -28,7 +28,7 @@ const tempRelaysPool = new Map<string, TempRelay>();
 export function getReadNDK(): NDK {
   if (!readNDK) {
     readNDK = new NDK({
-      explicitRelayUrls: process.env.NOSTR_RELAYS?.split(','),
+      explicitRelayUrls: requiredEnvVar('NOSTR_RELAYS').split(','),
     });
   }
   return readNDK;
@@ -43,7 +43,7 @@ export function getWriteNDK(): NDK {
   if (!writeNDK) {
     writeNDK = new NDK({
       explicitRelayUrls: [requiredEnvVar('NOSTR_WRITE_RELAY')],
-      signer: new NDKPrivateKeySigner(process.env.NOSTR_PRIVATE_KEY),
+      signer: new NDKPrivateKeySigner(requiredEnvVar('NOSTR_PRIVATE_KEY')),
     });
   }
   return writeNDK;
@@ -51,7 +51,7 @@ export function getWriteNDK(): NDK {
 
 export function getSignerNDK(): NDK {
   return new NDK({
-    signer: new NDKPrivateKeySigner(process.env.NOSTR_PRIVATE_KEY),
+    signer: new NDKPrivateKeySigner(requiredEnvVar('NOSTR_PRIVATE_KEY')),
   });
 }
 
@@ -77,7 +77,9 @@ export function connectToTempRelays(
   const relays: NDKRelay[] = [];
   for (const url of relayUrls) {
     let tempRelay = tempRelaysPool.get(url);
-    const timer = setTimeout(() => removeTempRelay(url), INACTIVE_TIMEOUT);
+    const timer = setTimeout(() => {
+      removeTempRelay(url);
+    }, INACTIVE_TIMEOUT);
     if (tempRelay) {
       clearTimeout(tempRelay.timer);
       tempRelay.timer = timer;
@@ -87,9 +89,9 @@ export function connectToTempRelays(
         warn('Error connecting to relay %s: %O', url, e);
         removeTempRelay(url);
       });
-      relay.on('connect', () =>
-        log('Connected to %s for %d ms', url, INACTIVE_TIMEOUT),
-      );
+      relay.on('connect', () => {
+        log('Connected to %s for %d ms', url, INACTIVE_TIMEOUT);
+      });
       tempRelay = { relay, timer };
       tempRelaysPool.set(url, tempRelay);
     }

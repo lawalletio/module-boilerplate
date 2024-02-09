@@ -7,7 +7,7 @@ const log: Debugger = logger.extend('lib:middlewares:error');
 
 export function errorHandler(
   err: Error,
-  req: Request,
+  _req: Request,
   res: Response<ErrorResponseContract>,
   _next: NextFunction,
 ) {

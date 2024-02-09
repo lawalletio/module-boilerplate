@@ -1,13 +1,14 @@
 import debug from 'debug';
-import { Router } from 'express';
+import { RequestHandler, Router } from 'express';
 import { globSync } from 'glob';
 import NDK, { NostrEvent } from '@nostr-dev-kit/ndk';
 import { v4 as uuidv4 } from 'uuid';
 
 import Path from 'path';
 import { Context } from '@type/request';
-export const logger: debug.Debugger = debug(process.env.MODULE_NAME || '');
+export const logger: debug.Debugger = debug(process.env['MODULE_NAME'] || '');
 import LastHandledTracker from '@lib/lastHandled';
+import { SubHandling } from '@type/nostr';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
@@ -19,7 +20,7 @@ const CREATED_AT_TOLERANCE: number = 2 * 180;
 const sAlpha: string =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 const sAlphaLength: bigint = BigInt(sAlpha.length);
-let lastHandledTracker: LastHandledTracker;
+let lastHandledTracker: LastHandledTracker | undefined;
 
 export class EmptyRoutesError extends Error {}
 export class DuplicateRoutesError extends Error {}
@@ -65,8 +66,8 @@ function findDuplicates(values: string[]): string[] {
   values.forEach((value) => {
     counter[value] = (counter[value] ?? 0) + 1;
   });
-  for (const key in counter) {
-    if (1 < counter[key]) {
+  for (const [key, count] of Object.entries(counter)) {
+    if (1 < count) {
       duplicates.push(key);
     }
   }
@@ -83,55 +84,49 @@ export function setUpRoutes(router: Router, path: string): Router {
   }
 
   if (duplicates.length) {
-    throw new DuplicateRoutesError(`Duplicate routes: ${duplicates}`);
+    throw new DuplicateRoutesError(
+      `Duplicate routes: ${duplicates.toString()}`,
+    );
   }
 
-  const routeHandlers = new Promise<Record<string, RouteMethod[]>>(
-    (resolve, _reject) => {
-      const allowedMethods: Record<string, RouteMethod[]> = {};
-      allFiles.forEach(async (file, index, array) => {
-        const matches = file.match(
-          /^(?<route>.*)\/(?<method>get|post|put|patch|delete)$/i,
-        );
+  const allowedMethodsByRoute: Record<string, RouteMethod[]> = {};
 
-        if (matches?.groups) {
-          const method: RouteMethod = matches.groups.method as RouteMethod;
-          const route: string = `/${matches.groups.route}`;
+  for (const file of allFiles) {
+    const matches = file.match(
+      /^(?<route>.*)\/(?<method>get|post|put|patch|delete)$/i,
+    );
 
-          router[method](
-            route,
-            (await require(Path.resolve(path, file))).default,
-          );
-          log(`Created ${method.toUpperCase()} route for ${route}`);
-          if (undefined == allowedMethods[route]) {
-            allowedMethods[route] = [];
-          }
-          allowedMethods[route].push(method);
-        } else {
-          warn(`Skipping ${file} as it doesn't comply to routes conventions.`);
-        }
-        if (index === array.length - 1) {
-          resolve(allowedMethods);
-        }
-      });
-    },
-  );
-  routeHandlers.then((allowedMethods) => {
-    log('Allowed methods %O', allowedMethods);
-    for (const route in allowedMethods) {
-      const allowed = allowedMethods[route]
-        .map((m) => m.toUpperCase())
-        .join(', ');
-      methods
-        .filter((m) => !allowedMethods[route].includes(m))
-        .forEach((m) => {
-          router[m](route, (req, res) => {
-            res.status(405).header('Allow', `OPTIONS, ${allowed}`).send();
-          });
-          log(`Created ${m.toUpperCase()} route for ${route}`);
-        });
+    if (matches?.groups) {
+      const method: RouteMethod = matches.groups['method'] as RouteMethod;
+      const route: string = `/${matches.groups['route']}`;
+      const handler =
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        (require(Path.resolve(path, file)) as { default: RequestHandler })
+          .default;
+      router[method](route, handler);
+      log(`Created ${method.toUpperCase()} route for ${route}`);
+      if (undefined === allowedMethodsByRoute[route]) {
+        allowedMethodsByRoute[route] = [];
+      }
+      allowedMethodsByRoute[route]!.push(method);
+    } else {
+      warn(`Skipping ${file} as it doesn't comply to routes conventions.`);
     }
-  });
+  }
+  log('Allowed methods %O', allowedMethodsByRoute);
+  for (const [route, allowedMethods] of Object.entries(allowedMethodsByRoute)) {
+    methods
+      .filter((m) => !allowedMethods.includes(m))
+      .forEach((m) => {
+        router[m](route, (_req, res) => {
+          res
+            .status(405)
+            .header('Allow', `OPTIONS, ${allowedMethods.toString()}`)
+            .send();
+        });
+        log(`Created ${m.toUpperCase()} route for ${route}`);
+      });
+  }
 
   return router;
 }
@@ -146,9 +141,9 @@ export async function setUpSubscriptions(
   const duplicates = findDuplicates(allFiles);
 
   if (duplicates.length) {
-    duplicates.forEach((duplicate) =>
-      warn(`Found duplicate subscription ${duplicate}`),
-    );
+    duplicates.forEach((duplicate) => {
+      warn(`Found duplicate subscription ${duplicate}`);
+    });
     return null;
   }
 
@@ -157,12 +152,15 @@ export async function setUpSubscriptions(
     await lastHandledTracker.fetchLastHandled();
   }
 
-  allFiles.forEach(async (file) => {
+  allFiles.forEach((file) => {
     const matches = file.match(/^(?<name>[^/]*)$/i);
-    const lastHandled: number = lastHandledTracker.get(file);
+    const lastHandled: number = lastHandledTracker!.get(file);
 
     if (matches?.groups) {
-      let { filter, getHandler } = await require(Path.resolve(path, file));
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { filter, getHandler } = require(
+        Path.resolve(path, file),
+      ) as SubHandling;
       if (lastHandled) {
         filter.since = lastHandled - CREATED_AT_TOLERANCE;
       } else {
@@ -177,16 +175,16 @@ export async function setUpSubscriptions(
             const handler: (nostrEvent: NostrEvent) => Promise<void> =
               getHandler(ctx, 0);
             await handler(nostrEvent);
-            lastHandledTracker.hit(file, nostrEvent.created_at);
+            lastHandledTracker!.hit(file, nostrEvent.created_at);
           } catch (e) {
             warn(
-              `Unexpected exception found when handling ${matches?.groups?.name}: %O`,
+              `Unexpected exception found when handling ${matches.groups?.['name']}: %O`,
               e,
             );
           }
         });
 
-      log(`Created ${matches.groups.name} subscription`);
+      log(`Created ${matches.groups['name']} subscription`);
     } else {
       warn(
         `Skipping ${file} as it doesn't comply to subscription conventions.`,
@@ -205,11 +203,13 @@ export function requiredEnvVar(key: string): string {
   return envVar;
 }
 
-export function requiredProp<T>(obj: any, key: string): T {
-  if (obj[key] === undefined) {
-    throw new Error(`Expected ${key} of ${obj} to be defined`);
+export function requiredProp<T extends object, V>(obj: T, key: keyof T): V {
+  if (!Object.hasOwn(obj, key)) {
+    throw new Error(
+      `Expected ${String(key)} of ${JSON.stringify(obj)} to be defined`,
+    );
   }
-  return obj[key];
+  return obj[key] as V;
 }
 
 export function nowInSeconds(): number {
@@ -217,17 +217,17 @@ export function nowInSeconds(): number {
 }
 
 export function isEmpty(obj: object): boolean {
-  for (let i in obj) {
+  for (const _ in obj) {
     return false;
   }
   return true;
 }
 
 export function shuffled<T>(array: Array<T>): Array<T> {
-  let result: Array<T> = Array.from(array);
+  const result: Array<T> = Array.from(array);
   for (let i = result.length - 1; 0 < i; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
+    [result[i], result[j]] = [result[j]!, result[i]!];
   }
   return result;
 }
@@ -280,19 +280,20 @@ export function generateSuuid(): string {
   return uuid2suuid(uuidv4()) as string;
 }
 
-export function jsonParseOrNull(
+export function jsonParseOrNull<T>(
   text: string,
-  reviver?: (this: any, key: string, value: any) => any,
-): any {
+  reviver?: (this: T, key: string, value: unknown) => T,
+): T | null {
   try {
-    return JSON.parse(text, reviver);
-  } catch (e) {
+    return JSON.parse(text, reviver) as T;
+  } catch (_e) {
     return null;
   }
 }
 
-export function jsonStringify(value: any): string {
-  return JSON.stringify(value, (_, v) =>
-    typeof v === 'bigint' ? String(v) : v,
+export function jsonStringify(value: unknown): string {
+  return JSON.stringify(
+    value,
+    (_, v) => (typeof v === 'bigint' ? String(v) : v) as unknown,
   );
 }

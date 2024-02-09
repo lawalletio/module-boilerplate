@@ -1,33 +1,43 @@
 {
-  "root": true,
   "env": {
     "jest": true
   },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/strict-type-checked",
+    "prettier"
+  ],
+  "ignorePatterns": ["pnpm-lock.yaml", "dist/"],
+  "overrides": [
+    {
+      "files": ["tests/**"],
+      "plugins": ["jest"],
+      "extends": ["plugin:jest/recommended"],
+      "rules": {
+        "@typescript-eslint/unbound-method": "off",
+        "jest/unbound-method": "error"
+      }
+    }
+  ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "project": "./tsconfig.eslint.json"
   },
-  "extends": "airbnb-typescript/base",
   "plugins": ["import", "@typescript-eslint"],
+  "root": true,
   "rules": {
-    "comma-dangle": 0,
-    "no-underscore-dangle": 0,
-    "no-param-reassign": 0,
-    "no-return-assign": 0,
-    "camelcase": 0,
-    "import/extensions": 0,
-    "@typescript-eslint/no-redeclare": 0,
-    "no-unused-vars": "off",
+    "@typescript-eslint/no-non-null-assertion": 0,
     "@typescript-eslint/no-unused-vars": [
-      "warn", // or "error"
+      "error",
       {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
-        "caughtErrorsIgnorePattern": "^_"
+        "caughtErrors": "all",
+        "caughtErrorsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_"
       }
     ]
   },
-  "ignorePatterns": ["jest.config.js"],
   "settings": {
     "import/parsers": {
       "@typescript-eslint/parser": [".ts"]

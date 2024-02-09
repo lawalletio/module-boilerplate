@@ -17,14 +17,14 @@ export class OutboxService implements Outbox {
         .then((relays) => {
           if (0 === relays.size) {
             error('Could not publish to any relay event %s', event.id);
-            reject('Did not publish to any relay');
+            reject(new Error('Did not publish to any relay'));
           } else {
             resolve();
           }
         })
         .catch((e) => {
           error('Error found when publishing event %s: %O', event.id, e);
-          reject('Unexpected error publishing event');
+          reject(new Error('Unexpected error publishing event'));
         });
     });
   }

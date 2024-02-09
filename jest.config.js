@@ -1,33 +1,30 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
-module.exports = {
+module.exports =  {
   clearMocks: true,
   collectCoverage: true,
-  collectCoverageFrom: [
-    '<rootDir>/src/**/*.ts',
-  ],
-  coverageDirectory: '.coverage',
+  collectCoverageFrom: ['<rootDir>/src/**/*.ts'],
+  coveragePathIgnorePatterns: ['\\.test\\.ts'],
+  coverageDirectory: '<rootDir>/dist/.coverage',
   coverageProvider: 'babel',
+  logHeapUsage: true,
+  passWithNoTests: true,
+  preset: 'ts-jest',
+  randomize: true,
+  resetModules: true,
+  restoreMocks: false,
+  rootDir: '.',
+  setupFiles: [ 'dotenv/config' ],
+  testEnvironment: 'node',
+  testMatch: ['<rootDir>/tests/**/*.test.ts'],
+  maxWorkers: 1,
   moduleNameMapper: {
     "^@constants/(.*)$": '<rootDir>/src/constants/$1',
     "^@lib/(.*)$": '<rootDir>/src/lib/$1',
+    "^@mocks/(.*)$": '<rootDir>/__mocks__/$1',
     "^@nostr/(.*)$": '<rootDir>/src/nostr/$1',
     "^@rest/(.*)$": '<rootDir>/src/rest/$1',
     "^@services/(.*)$": '<rootDir>/src/services/$1',
+    "^@src/(.*)$": '<rootDir>/src/$1',
     "^@type/(.*)$": '<rootDir>/src/type/$1',
-  },
-  randomize: true,
-  setupFiles: [
-    'dotenv/config',
-  ],
-  testEnvironment: 'node',
-  testMatch: [
-    '<rootDir>/tests/**/*.test.ts',
-  ],
-  testPathIgnorePatterns: [
-    '<rootDir>/node_modules/',
-    '<rootDir>/dist/',
-  ],
-  transform: {
-    '\\.ts$': 'ts-jest',
   },
 };

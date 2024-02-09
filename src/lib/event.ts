@@ -26,7 +26,7 @@ import {
 } from 'crypto';
 
 import * as crypto from 'node:crypto';
-// @ts-ignore
+// @ts-expect-error property missing
 globalThis.crypto = crypto;
 
 const log: Debugger = logger.extend('lib:event');
@@ -48,7 +48,7 @@ export enum Kind {
  */
 function validateNip26(event: NostrEvent): boolean {
   if (event.tags.some((t) => 'delegation' === t[0])) {
-    const delegator = nip26.getDelegator(event as Event<number>);
+    const delegator = nip26.getDelegator(event as Event);
     if (delegator) {
       event.pubkey = delegator;
     } else {
@@ -73,7 +73,7 @@ export function parseEventBody(
   debug('Received event: %O, expectedPubkey: %O', event, expectedPubkey);
   if (!validateEvent(event)) {
     log('Event validation failed');
-  } else if (!verifySignature(event as Event<number>)) {
+  } else if (!verifySignature(event as Event)) {
     log('Signature validation failed');
   } else if (!validateNip26(event)) {
     log('NIP-26 validation failed');
@@ -108,7 +108,7 @@ export function responseEvent(
   if (req) {
     tags = tags.concat([
       ['p', req.pubkey],
-      ['e', requiredProp(req, 'id')],
+      ['e', requiredProp<NostrEvent, string>(req, 'id')],
     ]);
   }
   return {
@@ -144,19 +144,19 @@ export function validateDelegationConditions(
 
     if (null !== mKind) {
       if (null === kind) {
-        kind = parseInt(mKind.groups!.kind, 10);
+        kind = parseInt(mKind.groups!['kind']!, 10);
       } else {
         return null;
       }
     } else if (null !== mSince) {
       if (null === since) {
-        since = parseInt(mSince.groups!.ts, 10);
+        since = parseInt(mSince.groups!['ts']!, 10);
       } else {
         return null;
       }
     } else if (null !== mUntil) {
       if (null === until) {
-        until = parseInt(mUntil.groups!.ts, 10);
+        until = parseInt(mUntil.groups!['ts']!, 10);
       } else {
         return null;
       }
@@ -212,7 +212,7 @@ export function validateDelegation(
  * RANDOM_MESSAGE_KEY is a uniformly random symmetric key used specifically for the message in question.
  *
  */
-interface MultiNip04Content {
+export interface MultiNip04Content {
   mac: string; // hash of MESSAGE, in base64
   enc: string; // encryption of MESSAGE with RANDOM_MESSAGE_KEY, as a NIP-04 content
   key: { [pk: string]: string }; // encryption of RANDOM_MESSAGE_KEY with public key "pk" in HEX, as a NIP-04 content
@@ -279,10 +279,10 @@ function doDecryptNip04Like(keyHex: string, message: string): string {
   const decipher: Decipher = createDecipheriv(
     'aes128',
     Buffer.from(keyHex, 'hex'),
-    Buffer.from(re.groups!.iv, 'base64'),
+    Buffer.from(re.groups!['iv']!, 'base64'),
   );
   return Buffer.from([
-    ...decipher.update(Buffer.from(re.groups!.ciphertext, 'base64')),
+    ...decipher.update(Buffer.from(re.groups!['ciphertext']!, 'base64')),
     ...decipher.final(),
   ]).toString('utf8');
 }
@@ -536,7 +536,7 @@ export async function parseMultiNip04Event(
     throw new Error('Receiver not in receivers list');
   }
 
-  const rawContent: Object = JSON.parse(event.content);
+  const rawContent: object = JSON.parse(event.content) as object;
 
   if (!('mac' in rawContent)) {
     throw new Error('Malformed event content, missing "mac"');
@@ -572,7 +572,7 @@ export async function parseMultiNip04Event(
 
   if (
     !Object.entries(rawContent.key).every(
-      (entry: [string, any]): boolean =>
+      (entry: [string, unknown]): boolean =>
         typeof entry[1] === 'string' && /^[^?]*\?iv=.*$/.test(entry[1]),
     )
   ) {
@@ -586,7 +586,7 @@ export async function parseMultiNip04Event(
   const messageKeyHex: string = await nip04.decrypt(
     receiverSecKeyHex,
     event.pubkey,
-    content.key[receiverPubKeyHex],
+    content.key[receiverPubKeyHex]!,
   );
 
   const decryptedMessage: string = doDecryptNip04Like(

@@ -1,6 +1,7 @@
 import { NostrEvent } from '@nostr-dev-kit/ndk';
 
 import {
+  MultiNip04Content,
   buildMultiNip04Event,
   getTagValue,
   parseEventBody,
@@ -93,7 +94,7 @@ describe('Event utils', () => {
         expected: expect.objectContaining({
           ...validDelegatedEvent,
           pubkey: delegator,
-        }),
+        }) as NostrEvent,
       },
     ])(
       'should resolve to $expected with $event and $expectedPubkey',
@@ -155,7 +156,7 @@ describe('Event utils', () => {
   describe('responseEvent', () => {
     it('should create response without request', () => {
       expect(responseEvent('response-type', 'Hello World')).toEqual({
-        pubkey: process.env.NOSTR_PUBLIC_KEY,
+        pubkey: process.env['NOSTR_PUBLIC_KEY'],
         created_at: now / 1000,
         kind: 21111,
         tags: [['t', 'response-type']],
@@ -169,7 +170,7 @@ describe('Event utils', () => {
         pubkey: 'myPubkey',
       } as NostrEvent;
       expect(responseEvent('response-type', 'Hello World', reqEvent)).toEqual({
-        pubkey: process.env.NOSTR_PUBLIC_KEY,
+        pubkey: process.env['NOSTR_PUBLIC_KEY'],
         created_at: now / 1000,
         kind: 21111,
         tags: [
@@ -255,7 +256,7 @@ describe('Event utils', () => {
 
       expect(event).toEqual(
         expect.objectContaining({
-          content: expect.any(String),
+          content: expect.any(String) as string,
           created_at: now / 1000,
           tags: [
             [
@@ -270,7 +271,7 @@ describe('Event utils', () => {
           pubkey: pub,
         }),
       );
-      const content = JSON.parse(event.content);
+      const content = JSON.parse(event.content) as MultiNip04Content;
       expect(content).toEqual({
         alg: 'sha256:nip-04:nip-04',
         enc: 'vWXLTR1QZZkvy0GXc+0C8A==?iv=AAAAAAAAAAAAAAAAAAAAAA==',

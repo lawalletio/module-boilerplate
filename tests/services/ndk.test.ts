@@ -1,11 +1,11 @@
 import NDK, { NDKRelay } from '@nostr-dev-kit/ndk';
+import { mockedNDKRelay } from '@mocks/@nostr-dev-kit/ndk';
 import {
   connectToTempRelays,
   getReadNDK,
   getSignerNDK,
   getWriteNDK,
 } from '@services/ndk';
-import { mockedNDKRelay } from '../../__mocks__/@nostr-dev-kit/ndk';
 
 const now: number = 1231006505000;
 jest.useFakeTimers({ now });
@@ -51,10 +51,10 @@ describe('NDK wrapper', () => {
     beforeEach(() => {
       jest.clearAllTimers();
     });
-    it('should', () => {
-      let relays: string[] = ['wss://relay.lawallet.ar'];
+    it('should connect correctly', () => {
+      const relays: string[] = ['wss://relay.lawallet.ar'];
       const ndk = new NDK();
-      mockedNDKRelay.on.mockImplementationOnce((_, fn) => {
+      mockedNDKRelay.on.mockImplementation((_, fn: () => void) => {
         fn();
       });
 
