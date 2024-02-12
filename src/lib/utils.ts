@@ -9,6 +9,7 @@ import { Context } from '@type/request';
 export const logger: debug.Debugger = debug(process.env['MODULE_NAME'] || '');
 import LastHandledTracker from '@lib/lastHandled';
 import { SubHandling } from '@type/nostr';
+import { fileURLToPath } from 'url';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
@@ -296,4 +297,8 @@ export function jsonStringify(value: unknown): string {
     value,
     (_, v) => (typeof v === 'bigint' ? String(v) : v) as unknown,
   );
+}
+
+export function urlToDirname(url: string): string {
+  return Path.dirname(fileURLToPath(url));
 }

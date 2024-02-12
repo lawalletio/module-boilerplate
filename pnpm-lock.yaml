@@ -142,6 +142,9 @@ devDependencies:
   ts-jest:
     specifier: ^29.1.2
     version: 29.1.2(@babel/core@7.23.9)(esbuild@0.20.0)(jest@29.7.0)(typescript@5.3.3)
+  ts-jest-mock-import-meta:
+    specifier: ^1.2.0
+    version: 1.2.0(ts-jest@29.1.2)
   typescript:
     specifier: ^5.3.3
     version: 5.3.3
@@ -5682,6 +5685,14 @@ packages:
       typescript: '>=4.2.0'
     dependencies:
       typescript: 5.3.3
+    dev: true
+
+  /ts-jest-mock-import-meta@1.2.0(ts-jest@29.1.2):
+    resolution: {integrity: sha512-r2+TH6d8LHBXqLTXjJh1KfTZoMvGV0hdn9gwickNVcwS2Co2/mewGjj0XDVEPLg5MVfZVHUFQ9O09anURA3KCw==}
+    peerDependencies:
+      ts-jest: '>=20.0.0'
+    dependencies:
+      ts-jest: 29.1.2(@babel/core@7.23.9)(esbuild@0.20.0)(jest@29.7.0)(typescript@5.3.3)
     dev: true
 
   /ts-jest@29.1.2(@babel/core@7.23.9)(esbuild@0.20.0)(jest@29.7.0)(typescript@5.3.3):

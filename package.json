@@ -18,10 +18,10 @@
     "test:v": "DEBUG='*,-babel jest --verbose' DOTENV_CONFIG_PATH=.env.test jest --runInBand",
     "test:watch": "DOTENV_CONFIG_PATH=.env.test jest --watch",
     "dev": "concurrently \"pnpm run build:watch\" \"pnpm run dev:watch\"",
-    "dev:watch": "nodemon --watch \"dist/**/*\" -w .env -r dotenv/config -e js ./dist/index.js",
+    "dev:watch": "nodemon --watch \"dist/**/*\" -w .env -r dotenv/config -e mjs ./dist/index.mjs",
     "build": "node ./build.mjs && pnpm run build:types",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "build:watch": "swc src -w --out-dir dist --copy-files",
+    "build:watch": "node ./build.mjs --watch",
     "start": "NODE_ENV=production node dist/index.js",
     "clean": "rm -rf dist .coverage",
     "reset": "pnpm clean && rm -rf node_modules && rm -f pnpm-lock.yaml",
@@ -83,6 +83,7 @@
     "prisma": "^5.9.1",
     "supertest": "^6.3.4",
     "ts-jest": "^29.1.2",
+    "ts-jest-mock-import-meta": "^1.2.0",
     "typescript": "^5.3.3"
   },
   "overrides": {

@@ -8,6 +8,7 @@ import {
   logger,
   setUpRoutes,
   setUpSubscriptions,
+  urlToDirname,
 } from '@lib/utils';
 import { Context, ExtendedRequest } from '@type/request';
 import 'websocket-polyfill';
@@ -41,7 +42,7 @@ readNDK.pool.on('relay:connect', async (relay: NDKRelay) => {
     ctx,
     readNDK,
     writeNDK,
-    path.join(__dirname, './nostr'),
+    path.join(urlToDirname(import.meta.url), './nostr'),
   );
 
   if (null === subscribed) {
@@ -72,7 +73,10 @@ let routes: Router = express.Router();
 let startExpress = true;
 
 try {
-  routes = setUpRoutes(routes, path.join(__dirname, 'rest'));
+  routes = setUpRoutes(
+    routes,
+    path.join(urlToDirname(import.meta.url), 'rest'),
+  );
 } catch (e) {
   if (e instanceof EmptyRoutesError) {
     log('Empty routes, this module will not be reachable by HTTP API');

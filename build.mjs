@@ -2,7 +2,7 @@
 
 import { writeFileSync } from 'fs';
 
-import { build } from 'esbuild';
+import { context, build } from 'esbuild';
 
 const buildOptions = {
   bundle: true,
@@ -14,15 +14,21 @@ const buildOptions = {
   sourcemap: 'linked',
   sourcesContent: false,
   tsconfig: './tsconfig.build.json',
+  format: 'esm',
+  outfile: './dist/index.mjs',
+  packages: 'external',
 };
 
-const results = await Promise.all([
-  build({
-    ...buildOptions,
-    format: 'esm',
-    outfile: './dist/index.js',
-    packages: 'external',
-  }),
-]);
+for (const arg of process.argv) {
+  switch (arg) {
+    case '-w':
+    case '--watch':
+      const ctx = await context(buildOptions);
+      await ctx.watch();
+      break;
+    default:
+      const res = await build(buildOptions);
+      writeFileSync('./dist/meta.json', JSON.stringify(res.metafile));
+  }
+}
 
-writeFileSync('./dist/meta.json', JSON.stringify(results[0].metafile));
