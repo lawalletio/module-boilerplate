@@ -16,11 +16,12 @@ import {
   suuid2uuid,
   uuid2suuid,
 } from '@lib/utils';
-import { Context } from '@type/request';
+import { DefaultContext } from '@type/request';
 import NDK, { NDKSubscription } from '@nostr-dev-kit/ndk';
 import EventEmitter from 'events';
 import { Path, globSync } from 'glob';
 import { v4 } from 'uuid';
+import { mockRouteRes } from '@mocks/express';
 
 const now: number = 1231006505000;
 jest.useFakeTimers({ now });
@@ -86,86 +87,48 @@ describe('utils', () => {
           globPath('/hello/get.ts'),
           globPath('/hello/ignored.ts'),
         ]);
-      const mockRes = {
-        status: jest.fn().mockReturnThis(),
-        header: jest.fn().mockReturnThis(),
-        send: jest.fn().mockReturnThis(),
-      };
 
       const router: Router = setUpRoutes(Router(), '');
       await Promise.resolve();
-      type PartialLayer = {
-        route: { stack: PartialLayer[] };
-        handle: (arg0: object | null, arg1: object) => void;
-      };
-      (router.stack[9] as PartialLayer).route.stack[0]!.handle(null, mockRes);
 
-      expect(router.stack.length).toBe(10);
-      expect(router.stack).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            route: expect.objectContaining({
-              methods: { post: true },
-              path: '//hello/world',
-            }) as PartialLayer['route'],
-          }),
-          expect.objectContaining({
-            route: expect.objectContaining({
-              methods: { get: true },
-              path: '//hello/world',
-            }) as PartialLayer['route'],
-          }),
-          expect.objectContaining({
-            route: expect.objectContaining({
-              methods: { put: true },
-              path: '//hello/world',
-            }) as PartialLayer['route'],
-          }),
-          expect.objectContaining({
-            route: expect.objectContaining({
-              methods: { patch: true },
-              path: '//hello/world',
-            }) as PartialLayer['route'],
-          }),
-          expect.objectContaining({
-            route: expect.objectContaining({
-              methods: { delete: true },
-              path: '//hello/world',
-            }) as PartialLayer['route'],
-          }),
-          expect.objectContaining({
-            route: expect.objectContaining({
-              methods: { get: true },
-              path: '//hello',
-            }) as PartialLayer['route'],
-          }),
-          expect.objectContaining({
-            route: expect.objectContaining({
-              methods: { post: true },
-              path: '//hello',
-            }) as PartialLayer['route'],
-          }),
-          expect.objectContaining({
-            route: expect.objectContaining({
-              methods: { put: true },
-              path: '//hello',
-            }) as PartialLayer['route'],
-          }),
-          expect.objectContaining({
-            route: expect.objectContaining({
-              methods: { patch: true },
-              path: '//hello',
-            }) as PartialLayer['route'],
-          }),
-          expect.objectContaining({
-            route: expect.objectContaining({
-              methods: { delete: true },
-              path: '//hello',
-            }) as PartialLayer['route'],
-          }),
-        ]),
+      expect(router.get).toHaveBeenCalledTimes(2);
+      expect(router.get).toHaveBeenCalledWith(
+        '//hello/world',
+        expect.any(Function),
       );
-      expect(mockRes.status).toHaveBeenCalledWith(405);
+      expect(router.get).toHaveBeenCalledWith('//hello', expect.any(Function));
+      expect(router.post).toHaveBeenCalledTimes(2);
+      expect(router.post).toHaveBeenCalledWith(
+        '//hello/world',
+        expect.any(Function),
+      );
+      expect(router.post).toHaveBeenCalledWith('//hello', expect.any(Function));
+      expect(router.put).toHaveBeenCalledTimes(2);
+      expect(router.put).toHaveBeenCalledWith(
+        '//hello/world',
+        expect.any(Function),
+      );
+      expect(router.put).toHaveBeenCalledWith('//hello', expect.any(Function));
+      expect(router.patch).toHaveBeenCalledTimes(2);
+      expect(router.patch).toHaveBeenCalledWith(
+        '//hello/world',
+        expect.any(Function),
+      );
+      expect(router.patch).toHaveBeenCalledWith(
+        '//hello',
+        expect.any(Function),
+      );
+      expect(router.delete).toHaveBeenCalledTimes(2);
+      expect(router.delete).toHaveBeenCalledWith(
+        '//hello/world',
+        expect.any(Function),
+      );
+      expect(router.delete).toHaveBeenCalledWith(
+        '//hello',
+        expect.any(Function),
+      );
+      expect(mockRouteRes.status).toHaveBeenCalledTimes(7);
+      expect(mockRouteRes.status).toHaveBeenCalledWith(405);
     });
   });
 
@@ -176,7 +139,7 @@ describe('utils', () => {
         .mockReturnValueOnce([globPath('hello.ts'), globPath('hello.ts')]);
 
       const ndk = await setUpSubscriptions(
-        {} as Context,
+        {} as DefaultContext,
         {} as NDK,
         {} as NDK,
         '',
@@ -209,7 +172,7 @@ describe('utils', () => {
           globPath('handler2.ts'),
           globPath('Invalid/handler/this.ts'),
         ]);
-      const ctx = {} as Context;
+      const ctx = {} as DefaultContext;
       const mockSub = jest.fn();
       const readNDK = {
         subscribe: mockSub,

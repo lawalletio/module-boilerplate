@@ -5,7 +5,7 @@ import NDK, { NostrEvent } from '@nostr-dev-kit/ndk';
 import { v4 as uuidv4 } from 'uuid';
 
 import Path from 'path';
-import { Context } from '@type/request';
+import { DefaultContext } from '@type/request';
 export const logger: debug.Debugger = debug(process.env['MODULE_NAME'] || '');
 import LastHandledTracker from '@lib/lastHandled';
 import { SubHandling } from '@type/nostr';
@@ -132,7 +132,9 @@ export function setUpRoutes(router: Router, path: string): Router {
   return router;
 }
 
-export async function setUpSubscriptions(
+export async function setUpSubscriptions<
+  Context extends DefaultContext = DefaultContext,
+>(
   ctx: Context,
   readNdk: NDK,
   writeNDK: NDK,
@@ -161,7 +163,7 @@ export async function setUpSubscriptions(
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { filter, getHandler } = require(
         Path.resolve(path, file),
-      ) as SubHandling;
+      ) as SubHandling<Context>;
       if (lastHandled) {
         filter.since = lastHandled - CREATED_AT_TOLERANCE;
       } else {

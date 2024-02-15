@@ -1,14 +1,13 @@
 import { NDKFilter, NostrEvent } from '@nostr-dev-kit/ndk';
-import { Context } from '@type/request';
+import { DefaultContext } from '@type/request';
 
 export type EventHandler = (event: NostrEvent) => Promise<void>;
 
-export type EventHandlerGenerator = (
-  ctx: Context,
-  iteration?: number,
-) => EventHandler;
+export type EventHandlerGenerator<
+  Context extends DefaultContext = DefaultContext,
+> = (ctx: Context, iteration?: number) => EventHandler;
 
-export type SubHandling = {
+export type SubHandling<Context extends DefaultContext = DefaultContext> = {
   filter: NDKFilter;
-  getHandler: EventHandlerGenerator;
+  getHandler: EventHandlerGenerator<Context>;
 };

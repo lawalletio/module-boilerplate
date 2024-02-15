@@ -2,7 +2,7 @@ import { Debugger } from 'debug';
 import type { NDKFilter, NostrEvent } from '@nostr-dev-kit/ndk';
 
 import { logger } from '../lib/utils';
-import { Context } from '@type/request';
+import { DefaultContext } from '@type/request';
 import { EventHandler } from '@type/nostr';
 
 const log: Debugger = logger.extend('nostr:subscriptionName');
@@ -19,7 +19,7 @@ const filter: NDKFilter = {
   // limit: null,
 };
 
-const getHandler = (ctx: Context): EventHandler => {
+const getHandler = (ctx: DefaultContext): EventHandler => {
   return async (event: NostrEvent): Promise<void> => {
     log('******* Received event: *******');
     log(event.content);

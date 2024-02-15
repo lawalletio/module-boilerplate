@@ -1,12 +1,12 @@
 import { NostrEvent } from '@nostr-dev-kit/ndk';
 import { getHandler } from '@nostr/subscriptionName';
-import { Context } from '@type/request';
+import { DefaultContext } from '@type/request';
 
 describe('Nostr handler', () => {
   it('should handle received evenshould handle received event', async () => {
-    const context: Context = {
+    const context: DefaultContext = {
       outbox: { publish: jest.fn() },
-    } as unknown as Context;
+    } as unknown as DefaultContext;
     const event = {} as NostrEvent;
 
     const handler = getHandler(context);

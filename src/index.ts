@@ -1,7 +1,6 @@
-import app from '@src/app';
 import path from 'path';
 import { Debugger } from 'debug';
-import express, { Router } from 'express';
+import express, { Application, Router } from 'express';
 import * as middlewares from '@lib/middlewares';
 import {
   EmptyRoutesError,
@@ -10,106 +9,164 @@ import {
   setUpSubscriptions,
   urlToDirname,
 } from '@lib/utils';
-import { Context, ExtendedRequest } from '@type/request';
+import { DefaultContext, ExtendedRequest } from '@type/request';
 import 'websocket-polyfill';
 
 import { getReadNDK, getWriteNDK } from '@services/ndk';
-import { NDKRelay } from '@nostr-dev-kit/ndk';
+import NDK, { NDKRelay } from '@nostr-dev-kit/ndk';
 import { OutboxService } from '@services/outbox';
-import { getPrisma } from '@services/prisma';
-
-/* istanbul ignore next */
-const port = process.env['PORT'] || 8000;
+import morgan from 'morgan';
+import helmet from 'helmet';
+import cors from 'cors';
+import { Server } from 'http';
 
 const log: Debugger = logger.extend('index');
 const warn: Debugger = log.extend('warn');
-const error: Debugger = log.extend('error');
 
-const writeNDK = getWriteNDK();
-const ctx: Context = {
-  prisma: getPrisma(),
-  outbox: new OutboxService(getWriteNDK()),
-};
+export type ModuleConfiguration<
+  Context extends DefaultContext = DefaultContext,
+> = Partial<{
+  expressApp: Application;
+  nostrPath: string;
+  port: number;
+  readNDK: NDK;
+  restPath: string;
+  writeNDK: NDK;
+}> & { context: Context };
 
-// Instantiate ndk
-log('Instantiate NDK');
-const readNDK = getReadNDK();
+export class Module<Context extends DefaultContext = DefaultContext> {
+  readonly app: Application;
+  readonly context: Context;
+  #nostrPath: string;
+  readonly port: number;
+  #readNDK: NDK;
+  #restPath: string;
+  #server?: Server | undefined;
+  #writeNDK: NDK;
 
-readNDK.pool.on('relay:connect', async (relay: NDKRelay) => {
-  log('Connected to Relay %s', relay.url);
-  log('Subscribing...');
-  const subscribed = await setUpSubscriptions(
-    ctx,
-    readNDK,
-    writeNDK,
-    path.join(urlToDirname(import.meta.url), './nostr'),
-  );
-
-  if (null === subscribed) {
-    throw new Error('Error setting up subscriptions');
+  private constructor(config: ModuleConfiguration<Context>) {
+    this.#nostrPath =
+      config.nostrPath || path.join(urlToDirname(import.meta.url), './nostr');
+    this.port = config.port || 8000;
+    this.#readNDK = config.readNDK || getReadNDK();
+    this.#restPath =
+      config.restPath || path.join(urlToDirname(import.meta.url), './rest');
+    this.#writeNDK = config.writeNDK || getWriteNDK();
+    this.context = config.context;
+    this.app = config.expressApp || this.#defaultApp();
+    Object.seal(this);
   }
-});
 
-readNDK.pool.on('relay:disconnect', (relay: NDKRelay) => {
-  log('Disconnected from relay %s', relay.url);
-});
+  static build<BuildContext extends DefaultContext = DefaultContext>(
+    config?: ModuleConfiguration<BuildContext>,
+  ): Module<BuildContext> {
+    if (undefined === config) {
+      return new Module({
+        context: { outbox: new OutboxService(getWriteNDK()) } as DefaultContext,
+      }) as Module<BuildContext>;
+    }
+    return new Module<BuildContext>(config);
+  }
 
-readNDK.on('error', (err) => {
-  log('Error connecting to Relay', err);
-});
+  start(): void {
+    this.#readNDK.pool.on('relay:connect', async (relay: NDKRelay) => {
+      log('Connected to Relay %s', relay.url);
+      log('Subscribing...');
+      const subscribed = await setUpSubscriptions<Context>(
+        this.context,
+        this.#readNDK,
+        this.#writeNDK,
+        this.#nostrPath,
+      );
 
-// Connect to Nostr
-log('Connecting to Nostr...');
-readNDK.connect().catch((e) => {
-  warn('Error connecting to read relay: %o', e);
-});
-writeNDK.connect().catch((e) => {
-  warn('Error connecting to write relay: %o', e);
-});
+      if (null === subscribed) {
+        throw new Error('Error setting up subscriptions');
+      }
+    });
 
-// Generate routes
-log('Setting up routes...');
-let routes: Router = express.Router();
-let startExpress = true;
+    this.#readNDK.pool.on('relay:disconnect', (relay: NDKRelay) => {
+      log('Disconnected from relay %s', relay.url);
+    });
 
-try {
-  routes = setUpRoutes(
-    routes,
-    path.join(urlToDirname(import.meta.url), 'rest'),
-  );
-} catch (e) {
-  if (e instanceof EmptyRoutesError) {
-    log('Empty routes, this module will not be reachable by HTTP API');
-    startExpress = false;
-  } else {
-    throw e;
+    this.#readNDK.on('error', (err) => {
+      log('Error connecting to Relay', err);
+    });
+
+    // Connect to Nostr
+    log('Connecting to Nostr...');
+    this.#readNDK.connect().catch((e) => {
+      warn('Error connecting to read relay: %o', e);
+    });
+    this.#writeNDK.connect().catch((e) => {
+      warn('Error connecting to write relay: %o', e);
+    });
+
+    // Generate routes
+    log('Setting up routes...');
+    let routes: Router = express.Router();
+    let startExpress = true;
+
+    try {
+      routes = setUpRoutes(routes, this.#restPath);
+    } catch (e) {
+      if (e instanceof EmptyRoutesError) {
+        log('Empty routes, this module will not be reachable by HTTP API');
+        startExpress = false;
+      } else {
+        throw e;
+      }
+    }
+
+    if (startExpress) {
+      // Setup context
+      routes.use((req, _res, next) => {
+        (req as ExtendedRequest<Context>).context = this.context;
+        next();
+      });
+
+      // Setup express routes
+      this.app.use('/', routes);
+
+      // Setup express routes
+      this.app.use(middlewares.notFound);
+      this.app.use(middlewares.errorHandler);
+
+      //-- Start process --//
+
+      // Start listening
+      this.#server = this.app.listen(this.port, () => {
+        log(`Server is running on port ${this.port}`);
+      });
+    }
+  }
+
+  stop(): Promise<void> {
+    for (const readRelay of this.#readNDK.pool.relays.values()) {
+      readRelay.disconnect();
+    }
+    for (const writeRelay of this.#writeNDK.pool.relays.values()) {
+      writeRelay.disconnect();
+    }
+    if (this.#server) {
+      return new Promise((resolve, reject) => {
+        this.#server!.close((err?: Error) => {
+          if (undefined !== err) {
+            reject(err);
+            return;
+          }
+          resolve();
+          this.#server = undefined;
+        });
+      });
+    }
+    return Promise.resolve();
+  }
+
+  #defaultApp(): Application {
+    return express()
+      .use(morgan('dev'))
+      .use(helmet())
+      .use(express.json())
+      .use(cors());
   }
 }
-
-if (startExpress) {
-  // Setup context
-  routes.use((req, _res, next) => {
-    (req as ExtendedRequest).context = ctx;
-    next();
-  });
-
-  // Setup express routes
-  app.use('/', routes);
-
-  // Setup express routes
-  app.use(middlewares.notFound);
-  app.use(middlewares.errorHandler);
-
-  //-- Start process --//
-
-  // Start listening
-  app.listen(port, () => {
-    log(`Server is running on port ${port}`);
-  });
-}
-
-process.on('uncaughtException', (err) => {
-  error('Unexpected uncaught exception: %O', err);
-  log('Shutting down...');
-  process.exit(1);
-});

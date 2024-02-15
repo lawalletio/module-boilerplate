@@ -21,6 +21,9 @@ export const mockedNDK = {
   assertSigner: jest.fn(),
   connect: jest.fn().mockResolvedValue(''),
   on: jest.fn(),
-  pool : {on: jest.fn()},
+  pool : {
+    on: jest.fn(),
+    relays: new Map([[1, mockedNDKRelay]]),
+  },
 };
 export default jest.fn(() => mockedNDK);

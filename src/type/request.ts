@@ -1,15 +1,14 @@
 import { Request } from 'express';
-import type { PrismaClient } from '@prisma/client';
 import { Outbox } from '@services/outbox';
 
-export type Context = {
-  prisma: PrismaClient;
+export type DefaultContext = {
   outbox: Outbox;
 };
 
-export interface ExtendedRequest extends Request {
-  context: Context;
-}
+export type ExtendedRequest<Context extends DefaultContext = DefaultContext> =
+  Request & {
+    context: Context;
+  };
 
 export type RestHandler = {
   (req: ExtendedRequest, res: Response): Promise<void>;
