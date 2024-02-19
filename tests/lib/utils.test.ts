@@ -44,51 +44,58 @@ const globPath = (name: string): Path => {
 describe('utils', () => {
   describe('setUpRoutes', () => {
     it.each([
-      { files: [], expected: EmptyRoutesError },
+      { files: [], expected: expect.any(EmptyRoutesError) as EmptyRoutesError },
       {
         files: [globPath('hello.ts'), globPath('hello.ts')],
-        expected: DuplicateRoutesError,
+        expected: expect.any(DuplicateRoutesError) as DuplicateRoutesError,
       },
-    ])('should throw $expected', ({ files, expected }) => {
+    ])('should throw $expected', async ({ files, expected }) => {
       jest.mocked<typeof globSync>(globSync).mockReturnValueOnce(files);
 
-      expect(() => {
-        setUpRoutes(Router(), '');
-      }).toThrow(expected);
+      await expect(setUpRoutes(Router(), '')).rejects.toEqual(expected);
     });
 
     it('should generate routes correctly', async () => {
       jest.mock(
-        '/hello/world/post',
+        '/hello/world/post.js',
         () => {
-          return { default: jest.fn() };
+          return {
+            __esModule: true,
+            default: jest.fn(),
+          };
         },
         { virtual: true },
       );
       jest.mock(
-        '/hello/world/get',
+        '/hello/world/get.js',
         () => {
-          return { default: jest.fn() };
+          return {
+            __esModule: true,
+            default: jest.fn(),
+          };
         },
         { virtual: true },
       );
       jest.mock(
-        '/hello/get',
+        '/hello/get.js',
         () => {
-          return { default: jest.fn() };
+          return {
+            __esModule: true,
+            default: jest.fn(),
+          };
         },
         { virtual: true },
       );
       jest
         .mocked<typeof globSync>(globSync)
         .mockReturnValueOnce([
-          globPath('/hello/world/post.ts'),
-          globPath('/hello/world/get.ts'),
-          globPath('/hello/get.ts'),
-          globPath('/hello/ignored.ts'),
+          globPath('/hello/world/post.js'),
+          globPath('/hello/world/get.js'),
+          globPath('/hello/get.js'),
+          globPath('/hello/ignored.js'),
         ]);
 
-      const router: Router = setUpRoutes(Router(), '');
+      const router: Router = await setUpRoutes(Router(), '');
       await Promise.resolve();
 
       expect(router.get).toHaveBeenCalledTimes(2);
@@ -152,14 +159,14 @@ describe('utils', () => {
       const handler1 = jest.fn();
       const handler2 = jest.fn();
       jest.mock(
-        '../../handler1',
+        '../../handler1.js',
         () => {
           return { filter: {}, getHandler: () => handler1 };
         },
         { virtual: true },
       );
       jest.mock(
-        '../../handler2',
+        '../../handler2.js',
         () => {
           return { filter: {}, getHandler: handler2 };
         },
@@ -168,8 +175,8 @@ describe('utils', () => {
       jest
         .mocked<typeof globSync>(globSync)
         .mockReturnValueOnce([
-          globPath('handler1.ts'),
-          globPath('handler2.ts'),
+          globPath('handler1.js'),
+          globPath('handler2.js'),
           globPath('Invalid/handler/this.ts'),
         ]);
       const ctx = {} as DefaultContext;
@@ -190,7 +197,7 @@ describe('utils', () => {
         created_at: now / 1000 + 60,
         kind: 31111,
         pubkey: process.env['NOSTR_PUBLIC_KEY'],
-        tags: [['d', 'lastHandled:handler1']],
+        tags: [['d', 'lastHandled:handler1.js']],
       });
       mockSubTracker.emit('eose');
       mockSubHandler.emit('event', {});

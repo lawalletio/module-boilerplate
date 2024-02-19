@@ -6,7 +6,7 @@ import { logger } from '@lib/utils';
 const log: Debugger = logger.extend('index');
 const error: Debugger = log.extend('warn');
 
-export class OutboxService implements Outbox {
+export class OutboxService {
   constructor(private readonly ndk: NDK) {}
 
   publish(event: NostrEvent, relaySet?: NDKRelaySet): Promise<void> {
@@ -28,8 +28,4 @@ export class OutboxService implements Outbox {
         });
     });
   }
-}
-
-export interface Outbox {
-  publish(event: NostrEvent, relaySet?: NDKRelaySet): Promise<void>;
 }

@@ -1,16 +1,21 @@
 {
-  "name": "module-boilerplate",
+  "name": "@lawallet/module",
   "version": "0.1.0",
-  "description": "LaWallet Module Boilerplate",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "description": "LaWallet Module",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/types/index.d.ts",
   "files": [
-    "./dist/index.js",
-    "./dist/index.js.map"
+    "./dist/index.mjs",
+    "./dist/index.mjs.map",
+    "./dist/types"
   ],
   "exports": {
-    "default": "./dist/index.js"
+    "default": "./dist/index.mjs",
+    "types": "./dist/types/index.d.ts"
+  },
+  "engines": {
+    "node": ">=20.11.0"
   },
   "scripts": {
     "postinstall": "prisma generate",

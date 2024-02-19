@@ -9,7 +9,6 @@ import { DefaultContext } from '@type/request';
 export const logger: debug.Debugger = debug(process.env['MODULE_NAME'] || '');
 import LastHandledTracker from '@lib/lastHandled';
 import { SubHandling } from '@type/nostr';
-import { fileURLToPath } from 'url';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
@@ -46,14 +45,7 @@ function filesWithExtensionsWithoutExtensions(
     const fileExtension: string = Path.extname(filePath).toLowerCase();
 
     if (extensionsSet.has(fileExtension)) {
-      const fileBase: string = Path.basename(filePath);
-
-      allFiles.push(
-        Path.join(
-          Path.dirname(filePath),
-          fileBase.substring(0, fileBase.length - fileExtension.length),
-        ),
-      );
+      allFiles.push(filePath);
     }
   });
 
@@ -76,8 +68,15 @@ function findDuplicates(values: string[]): string[] {
   return duplicates;
 }
 
-export function setUpRoutes(router: Router, path: string): Router {
-  const allFiles = filesWithExtensionsWithoutExtensions(path, ['js', 'ts']);
+export async function setUpRoutes(
+  router: Router,
+  path: string,
+): Promise<Router> {
+  const allFiles = filesWithExtensionsWithoutExtensions(path, [
+    'mjs',
+    'js',
+    'ts',
+  ]);
   const duplicates = findDuplicates(allFiles);
 
   if (0 === allFiles.length) {
@@ -94,16 +93,15 @@ export function setUpRoutes(router: Router, path: string): Router {
 
   for (const file of allFiles) {
     const matches = file.match(
-      /^(?<route>.*)\/(?<method>get|post|put|patch|delete)$/i,
+      /^(?<route>.*)\/(?<method>get|post|put|patch|delete)(?<ext>\..*)$/i,
     );
 
     if (matches?.groups) {
       const method: RouteMethod = matches.groups['method'] as RouteMethod;
       const route: string = `/${matches.groups['route']}`;
-      const handler =
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        (require(Path.resolve(path, file)) as { default: RequestHandler })
-          .default;
+      const handler = (
+        (await import(Path.resolve(path, file))) as { default: RequestHandler }
+      ).default;
       router[method](route, handler);
       log(`Created ${method.toUpperCase()} route for ${route}`);
       if (undefined === allowedMethodsByRoute[route]) {
@@ -155,15 +153,14 @@ export async function setUpSubscriptions<
     await lastHandledTracker.fetchLastHandled();
   }
 
-  allFiles.forEach((file) => {
+  for (const file of allFiles) {
     const matches = file.match(/^(?<name>[^/]*)$/i);
     const lastHandled: number = lastHandledTracker!.get(file);
 
     if (matches?.groups) {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { filter, getHandler } = require(
-        Path.resolve(path, file),
-      ) as SubHandling<Context>;
+      const { filter, getHandler } = (await import(
+        Path.resolve(path, file)
+      )) as SubHandling<Context>;
       if (lastHandled) {
         filter.since = lastHandled - CREATED_AT_TOLERANCE;
       } else {
@@ -193,7 +190,7 @@ export async function setUpSubscriptions<
         `Skipping ${file} as it doesn't comply to subscription conventions.`,
       );
     }
-  });
+  }
 
   return readNdk;
 }
@@ -299,8 +296,4 @@ export function jsonStringify(value: unknown): string {
     value,
     (_, v) => (typeof v === 'bigint' ? String(v) : v) as unknown,
   );
-}
-
-export function urlToDirname(url: string): string {
-  return Path.dirname(fileURLToPath(url));
 }

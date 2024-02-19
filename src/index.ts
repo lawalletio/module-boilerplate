@@ -1,13 +1,11 @@
-import path from 'path';
 import { Debugger } from 'debug';
-import express, { Application, Router } from 'express';
+import express, { Application } from 'express';
 import * as middlewares from '@lib/middlewares';
 import {
   EmptyRoutesError,
   logger,
   setUpRoutes,
   setUpSubscriptions,
-  urlToDirname,
 } from '@lib/utils';
 import { DefaultContext, ExtendedRequest } from '@type/request';
 import 'websocket-polyfill';
@@ -27,30 +25,30 @@ export type ModuleConfiguration<
   Context extends DefaultContext = DefaultContext,
 > = Partial<{
   expressApp: Application;
-  nostrPath: string;
   port: number;
   readNDK: NDK;
-  restPath: string;
   writeNDK: NDK;
-}> & { context: Context };
+}> & {
+  context: Context;
+  nostrPath: string;
+  restPath: string;
+};
 
 export class Module<Context extends DefaultContext = DefaultContext> {
   readonly app: Application;
   readonly context: Context;
-  #nostrPath: string;
+  readonly nostrPath: string;
   readonly port: number;
   #readNDK: NDK;
-  #restPath: string;
+  readonly restPath: string;
   #server?: Server | undefined;
   #writeNDK: NDK;
 
   private constructor(config: ModuleConfiguration<Context>) {
-    this.#nostrPath =
-      config.nostrPath || path.join(urlToDirname(import.meta.url), './nostr');
+    this.nostrPath = config.nostrPath;
     this.port = config.port || 8000;
     this.#readNDK = config.readNDK || getReadNDK();
-    this.#restPath =
-      config.restPath || path.join(urlToDirname(import.meta.url), './rest');
+    this.restPath = config.restPath;
     this.#writeNDK = config.writeNDK || getWriteNDK();
     this.context = config.context;
     this.app = config.expressApp || this.#defaultApp();
@@ -58,17 +56,22 @@ export class Module<Context extends DefaultContext = DefaultContext> {
   }
 
   static build<BuildContext extends DefaultContext = DefaultContext>(
-    config?: ModuleConfiguration<BuildContext>,
+    config:
+      | { nostrPath: string; restPath: string }
+      | ModuleConfiguration<BuildContext>,
   ): Module<BuildContext> {
-    if (undefined === config) {
-      return new Module({
-        context: { outbox: new OutboxService(getWriteNDK()) } as DefaultContext,
-      }) as Module<BuildContext>;
+    if ('context' in config) {
+      return new Module<BuildContext>(config);
     }
-    return new Module<BuildContext>(config);
+    return new Module({
+      context: {
+        outbox: new OutboxService(getWriteNDK()),
+      } as DefaultContext,
+      ...config,
+    }) as Module<BuildContext>;
   }
 
-  start(): void {
+  start(): Promise<void> {
     this.#readNDK.pool.on('relay:connect', async (relay: NDKRelay) => {
       log('Connected to Relay %s', relay.url);
       log('Subscribing...');
@@ -76,7 +79,7 @@ export class Module<Context extends DefaultContext = DefaultContext> {
         this.context,
         this.#readNDK,
         this.#writeNDK,
-        this.#nostrPath,
+        this.nostrPath,
       );
 
       if (null === subscribed) {
@@ -102,42 +105,36 @@ export class Module<Context extends DefaultContext = DefaultContext> {
     });
 
     // Generate routes
-    log('Setting up routes...');
-    let routes: Router = express.Router();
-    let startExpress = true;
+    log('Setting up routes... for %O', this.restPath);
+    return setUpRoutes(express.Router(), this.restPath)
+      .then((routes) => {
+        // Setup context
+        routes.use((req, _res, next) => {
+          (req as ExtendedRequest<Context>).context = this.context;
+          next();
+        });
 
-    try {
-      routes = setUpRoutes(routes, this.#restPath);
-    } catch (e) {
-      if (e instanceof EmptyRoutesError) {
-        log('Empty routes, this module will not be reachable by HTTP API');
-        startExpress = false;
-      } else {
-        throw e;
-      }
-    }
+        // Setup express routes
+        this.app.use('/', routes);
 
-    if (startExpress) {
-      // Setup context
-      routes.use((req, _res, next) => {
-        (req as ExtendedRequest<Context>).context = this.context;
-        next();
+        // Setup express routes
+        this.app.use(middlewares.notFound);
+        this.app.use(middlewares.errorHandler);
+
+        //-- Start process --//
+
+        // Start listening
+        this.#server = this.app.listen(this.port, () => {
+          log(`Server is running on port ${this.port}`);
+        });
+      })
+      .catch((e: Error) => {
+        if (e instanceof EmptyRoutesError) {
+          log('Empty routes, this module will not be reachable by HTTP API');
+        } else {
+          throw e;
+        }
       });
-
-      // Setup express routes
-      this.app.use('/', routes);
-
-      // Setup express routes
-      this.app.use(middlewares.notFound);
-      this.app.use(middlewares.errorHandler);
-
-      //-- Start process --//
-
-      // Start listening
-      this.#server = this.app.listen(this.port, () => {
-        log(`Server is running on port ${this.port}`);
-      });
-    }
   }
 
   stop(): Promise<void> {
@@ -170,3 +167,10 @@ export class Module<Context extends DefaultContext = DefaultContext> {
       .use(cors());
   }
 }
+
+export * from './lib/utils';
+export * from './lib/event';
+export * from './services/outbox';
+export * from './services/ndk';
+export * from './type/request';
+export * from './type/nostr';
