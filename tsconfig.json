@@ -28,7 +28,6 @@
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    //"outFile": "dist/index.d.ts",
     "outDir": "dist/types",
     "paths": {
       "@constants/*": ["./src/constants/*"],
