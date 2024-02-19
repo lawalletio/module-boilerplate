@@ -7,13 +7,11 @@ const now: number = 1231006505000;
 jest.useFakeTimers({ now });
 
 const mockedSub = jest.fn();
-const readNDK: NDK = {
-  subscribe: mockedSub,
-} as unknown as NDK;
 
 const mockedStats = jest.fn();
 const writeNDK: NDK = {
   pool: { stats: mockedStats },
+  subscribe: mockedSub,
 } as unknown as NDK;
 
 describe('Last Handled', () => {
@@ -25,7 +23,7 @@ describe('Last Handled', () => {
 
   describe('empty tracker', () => {
     it('should not publish any event', () => {
-      new LastHandledTracker(readNDK, writeNDK, []);
+      new LastHandledTracker(writeNDK, []);
       mockedStats.mockReturnValue({
         disconnected: 0,
         total: 1,
@@ -41,7 +39,7 @@ describe('Last Handled', () => {
     });
 
     it('should throw error when getting', () => {
-      const tracker = new LastHandledTracker(readNDK, writeNDK, []);
+      const tracker = new LastHandledTracker(writeNDK, []);
 
       expect(() => {
         tracker.get('');
@@ -49,7 +47,7 @@ describe('Last Handled', () => {
     });
 
     it('should throw error when hitting', () => {
-      const tracker = new LastHandledTracker(readNDK, writeNDK, []);
+      const tracker = new LastHandledTracker(writeNDK, []);
 
       expect(() => {
         tracker.hit('', 10);
@@ -59,11 +57,7 @@ describe('Last Handled', () => {
 
   describe('tracker', () => {
     it('should not publish event if the pool is disconnected', () => {
-      new LastHandledTracker(readNDK, writeNDK, [
-        'handler1',
-        'handler2',
-        'handler3',
-      ]);
+      new LastHandledTracker(writeNDK, ['handler1', 'handler2', 'handler3']);
       mockedStats.mockReturnValue({
         disconnected: 1,
         total: 1,
@@ -79,11 +73,7 @@ describe('Last Handled', () => {
     });
 
     it('should not publish event if it have not handled anything', () => {
-      new LastHandledTracker(readNDK, writeNDK, [
-        'handler1',
-        'handler2',
-        'handler3',
-      ]);
+      new LastHandledTracker(writeNDK, ['handler1', 'handler2', 'handler3']);
       mockedStats.mockReturnValue({
         disconnected: 0,
         total: 1,
@@ -99,7 +89,7 @@ describe('Last Handled', () => {
     });
 
     it('should publish events only for hitted handlers', () => {
-      const tracker = new LastHandledTracker(readNDK, writeNDK, [
+      const tracker = new LastHandledTracker(writeNDK, [
         'handler1',
         'handler2',
         'handler3',
@@ -152,7 +142,7 @@ describe('Last Handled', () => {
     });
 
     it('should load existing lastHandled information', async () => {
-      const tracker = new LastHandledTracker(readNDK, writeNDK, [
+      const tracker = new LastHandledTracker(writeNDK, [
         'handler1',
         'handler2',
         'handler3',
@@ -216,7 +206,7 @@ describe('Last Handled', () => {
     });
 
     it('should store greater timestamps', () => {
-      const tracker = new LastHandledTracker(readNDK, writeNDK, [
+      const tracker = new LastHandledTracker(writeNDK, [
         'handler1',
         'handler2',
         'handler3',
@@ -237,7 +227,7 @@ describe('Last Handled', () => {
     });
 
     it('should handle race condition', () => {
-      const tracker = new LastHandledTracker(readNDK, writeNDK, [
+      const tracker = new LastHandledTracker(writeNDK, [
         'handler1',
         'handler2',
         'handler3',

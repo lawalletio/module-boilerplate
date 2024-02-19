@@ -31,7 +31,6 @@ export default class LastHandledTracker {
   private arr: Int32Array;
 
   public constructor(
-    private readNDK: NDK,
     private writeNDK: NDK,
     public handlerNames: string[],
   ) {
@@ -78,7 +77,7 @@ export default class LastHandledTracker {
       '#d': this.handlerNames.map(tagName),
     };
     return new Promise((resolve, reject) => {
-      this.readNDK
+      this.writeNDK
         .subscribe(filter, { closeOnEose: true })
         .on('event', (event: NostrEvent) => {
           const dTagValue = event.tags.find((t) => t[0] === 'd')?.at(1);

@@ -226,7 +226,9 @@ describe('utils', () => {
       const readNDK = {
         subscribe: mockSub,
       } as unknown as NDK;
-      const writeNDK = {} as NDK;
+      const writeNDK = {
+        subscribe: mockSub,
+      } as unknown as NDK;
       const mockSubTracker = new EventEmitter() as unknown as NDKSubscription;
       const mockSubHandler = new EventEmitter() as unknown as NDKSubscription;
       mockSub

@@ -155,7 +155,7 @@ export async function setUpSubscriptions<
   const allFiles: string[] = paths.map((p) => p.relative());
 
   if (!lastHandledTracker && 0 < paths.length) {
-    lastHandledTracker = new LastHandledTracker(readNdk, writeNDK, allFiles);
+    lastHandledTracker = new LastHandledTracker(writeNDK, allFiles);
     await lastHandledTracker.fetchLastHandled();
   }
 
