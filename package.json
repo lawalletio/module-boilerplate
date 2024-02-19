@@ -35,11 +35,7 @@
     "prisma:migrate": "prisma migrate dev"
   },
   "keywords": [],
-  "author": {
-    "name": "La Crypta",
-    "url": "https://lacrypta.ar",
-    "email": "info@lacrypta.ar"
-  },
+  "author": "La Crypta <info@lacrypta.ar> (https://lacrypta.ar)",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@nostr-dev-kit/ndk": "^2.4.0",
@@ -98,5 +94,16 @@
     "overrides": {
       "nostr-tools": "npm:@lawallet/nostr-tools"
     }
-  }
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lawalletio/module-boilerplate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lawalletio/module-boilerplate/issues"
+  },
+  "homepage": "https://github.com/lawalletio/module-boilerplate#readme"
 }
