@@ -1,6 +1,6 @@
 import debug from 'debug';
 import { RequestHandler, Router } from 'express';
-import { globSync } from 'glob';
+import { globSync, Path as gPath } from 'glob';
 import NDK, { NostrEvent } from '@nostr-dev-kit/ndk';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -27,37 +27,35 @@ export class DuplicateRoutesError extends Error {}
 
 const methods: RouteMethod[] = ['get', 'post', 'put', 'patch', 'delete'];
 
-function filesWithExtensionsWithoutExtensions(
-  path: string,
-  extensions: string[],
-): string[] {
+function getPathsByExtensions(path: string, extensions: string[]): gPath[] {
   const extensionsSet = new Set(extensions.map((e) => `.${e.toLowerCase()}`));
-  const allFiles: string[] = [];
 
-  globSync('*', {
+  return globSync('*', {
     withFileTypes: true,
     cwd: path,
     matchBase: true,
     nocase: true,
     nodir: true,
-  }).map((value) => {
-    const filePath: string = value.relative();
-    const fileExtension: string = Path.extname(filePath).toLowerCase();
-
-    if (extensionsSet.has(fileExtension)) {
-      allFiles.push(filePath);
-    }
+  }).filter((p) => {
+    return extensionsSet.has(Path.extname(p.name).toLowerCase());
   });
-
-  return allFiles;
 }
 
-function findDuplicates(values: string[]): string[] {
+function relativeReplacingInDirs(path: gPath, reg: RegExp, s: string): string {
+  const parts = path.relative().split('/');
+  let relative = '';
+  for (const part of parts) {
+    relative += `${part.replace(reg, s)}/`;
+  }
+  return relative;
+}
+
+function findDuplicates(values: gPath[]): string[] {
   const counter: { [key: string]: number } = {};
   const duplicates: string[] = [];
 
   values.forEach((value) => {
-    counter[value] = (counter[value] ?? 0) + 1;
+    counter[value.relative()] = (counter[value.relative()] ?? 0) + 1;
   });
   for (const [key, count] of Object.entries(counter)) {
     if (1 < count) {
@@ -70,16 +68,17 @@ function findDuplicates(values: string[]): string[] {
 
 export async function setUpRoutes(
   router: Router,
-  path: string,
+  rootPath: string,
 ): Promise<Router> {
-  const allFiles = filesWithExtensionsWithoutExtensions(path, [
+  const paths: gPath[] = getPathsByExtensions(rootPath, [
+    'cjs',
     'mjs',
     'js',
     'ts',
   ]);
-  const duplicates = findDuplicates(allFiles);
+  const duplicates = findDuplicates(paths);
 
-  if (0 === allFiles.length) {
+  if (0 === paths.length) {
     throw new EmptyRoutesError();
   }
 
@@ -91,8 +90,10 @@ export async function setUpRoutes(
 
   const allowedMethodsByRoute: Record<string, RouteMethod[]> = {};
 
-  for (const file of allFiles) {
-    const matches = file.match(
+  for (const path of paths) {
+    const modulePath = path.relative();
+    const routePath = relativeReplacingInDirs(path, /^_/, ':');
+    const matches = routePath.match(
       /^(?<route>.*)\/(?<method>get|post|put|patch|delete)(?<ext>\..*)$/i,
     );
 
@@ -100,7 +101,9 @@ export async function setUpRoutes(
       const method: RouteMethod = matches.groups['method'] as RouteMethod;
       const route: string = `/${matches.groups['route']}`;
       const handler = (
-        (await import(Path.resolve(path, file))) as { default: RequestHandler }
+        (await import(Path.resolve(rootPath, modulePath))) as {
+          default: RequestHandler;
+        }
       ).default;
       router[method](route, handler);
       log(`Created ${method.toUpperCase()} route for ${route}`);
@@ -109,7 +112,9 @@ export async function setUpRoutes(
       }
       allowedMethodsByRoute[route]!.push(method);
     } else {
-      warn(`Skipping ${file} as it doesn't comply to routes conventions.`);
+      warn(
+        `Skipping ${modulePath} as it doesn't comply to routes conventions.`,
+      );
     }
   }
   log('Allowed methods %O', allowedMethodsByRoute);
@@ -138,8 +143,8 @@ export async function setUpSubscriptions<
   writeNDK: NDK,
   path: string,
 ): Promise<NDK | null> {
-  const allFiles = filesWithExtensionsWithoutExtensions(path, ['js', 'ts']);
-  const duplicates = findDuplicates(allFiles);
+  const paths: gPath[] = getPathsByExtensions(path, ['cjs', 'mjs', 'js', 'ts']);
+  const duplicates = findDuplicates(paths);
 
   if (duplicates.length) {
     duplicates.forEach((duplicate) => {
@@ -147,8 +152,9 @@ export async function setUpSubscriptions<
     });
     return null;
   }
+  const allFiles: string[] = paths.map((p) => p.relative());
 
-  if (!lastHandledTracker && 0 < allFiles.length) {
+  if (!lastHandledTracker && 0 < paths.length) {
     lastHandledTracker = new LastHandledTracker(readNdk, writeNDK, allFiles);
     await lastHandledTracker.fetchLastHandled();
   }

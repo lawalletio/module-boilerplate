@@ -37,8 +37,20 @@ jest.mock('glob', () => {
   };
 });
 
-const globPath = (name: string): Path => {
-  return { relative: () => name } as Path;
+const globPath = (path: string): Path => {
+  let p: Path | undefined = undefined;
+  for (const name of path.split('/')) {
+    p = {
+      name,
+      parent: p,
+      relative: function () {
+        return this.parent?.relative
+          ? `${this.parent.relative()}/${this.name}`
+          : this.name;
+      },
+    } as Path;
+  }
+  return p!;
 };
 
 describe('utils', () => {
@@ -77,6 +89,26 @@ describe('utils', () => {
         { virtual: true },
       );
       jest.mock(
+        '/hello/_name/get.js',
+        () => {
+          return {
+            __esModule: true,
+            default: jest.fn(),
+          };
+        },
+        { virtual: true },
+      );
+      jest.mock(
+        '/hello/:param/get.js',
+        () => {
+          return {
+            __esModule: true,
+            default: jest.fn(),
+          };
+        },
+        { virtual: true },
+      );
+      jest.mock(
         '/hello/get.js',
         () => {
           return {
@@ -91,6 +123,8 @@ describe('utils', () => {
         .mockReturnValueOnce([
           globPath('/hello/world/post.js'),
           globPath('/hello/world/get.js'),
+          globPath('/hello/_name/get.js'),
+          globPath('/hello/:param/get.js'),
           globPath('/hello/get.js'),
           globPath('/hello/ignored.js'),
         ]);
@@ -98,25 +132,33 @@ describe('utils', () => {
       const router: Router = await setUpRoutes(Router(), '');
       await Promise.resolve();
 
-      expect(router.get).toHaveBeenCalledTimes(2);
+      expect(router.get).toHaveBeenCalledTimes(4);
       expect(router.get).toHaveBeenCalledWith(
         '//hello/world',
         expect.any(Function),
       );
       expect(router.get).toHaveBeenCalledWith('//hello', expect.any(Function));
-      expect(router.post).toHaveBeenCalledTimes(2);
+      expect(router.get).toHaveBeenCalledWith(
+        '//hello/:name',
+        expect.any(Function),
+      );
+      expect(router.get).toHaveBeenCalledWith(
+        '//hello/:param',
+        expect.any(Function),
+      );
+      expect(router.post).toHaveBeenCalledTimes(4);
       expect(router.post).toHaveBeenCalledWith(
         '//hello/world',
         expect.any(Function),
       );
       expect(router.post).toHaveBeenCalledWith('//hello', expect.any(Function));
-      expect(router.put).toHaveBeenCalledTimes(2);
+      expect(router.put).toHaveBeenCalledTimes(4);
       expect(router.put).toHaveBeenCalledWith(
         '//hello/world',
         expect.any(Function),
       );
       expect(router.put).toHaveBeenCalledWith('//hello', expect.any(Function));
-      expect(router.patch).toHaveBeenCalledTimes(2);
+      expect(router.patch).toHaveBeenCalledTimes(4);
       expect(router.patch).toHaveBeenCalledWith(
         '//hello/world',
         expect.any(Function),
@@ -125,7 +167,7 @@ describe('utils', () => {
         '//hello',
         expect.any(Function),
       );
-      expect(router.delete).toHaveBeenCalledTimes(2);
+      expect(router.delete).toHaveBeenCalledTimes(4);
       expect(router.delete).toHaveBeenCalledWith(
         '//hello/world',
         expect.any(Function),
@@ -134,7 +176,7 @@ describe('utils', () => {
         '//hello',
         expect.any(Function),
       );
-      expect(mockRouteRes.status).toHaveBeenCalledTimes(7);
+      expect(mockRouteRes.status).toHaveBeenCalledTimes(15);
       expect(mockRouteRes.status).toHaveBeenCalledWith(405);
     });
   });

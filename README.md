@@ -7,7 +7,7 @@ in [lawallet.io](https://lawallet.io/wallet-provider/architecture/system-archite
 ## Installation
 
 ```bash
-pnpm add @lawallet/module@~0.1.0
+pnpm add @lawallet/module
 ```
 
 ## Usage
