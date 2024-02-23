@@ -1,12 +1,12 @@
 import { Debugger } from 'debug';
 import NDK, { NDKEvent, NDKRelaySet, NostrEvent } from '@nostr-dev-kit/ndk';
 
-import { logger } from '@lib/utils';
+import { jsonStringify, logger } from '@lib/utils';
 
 const log: Debugger = logger.extend('index');
 const error: Debugger = log.extend('warn');
 
-export class OutboxService {
+export class DirectOutbox implements Outbox {
   constructor(private readonly ndk: NDK) {}
 
   publish(event: NostrEvent, relaySet?: NDKRelaySet): Promise<void> {
@@ -28,4 +28,30 @@ export class OutboxService {
         });
     });
   }
+}
+
+export class ApiGatewayOutbox implements Outbox {
+  constructor(private readonly postUrl: string) {}
+
+  async publish(event: NostrEvent, relaySet?: NDKRelaySet): Promise<void> {
+    if (undefined !== relaySet) {
+      throw new Error('Unsupported param relaySet');
+    }
+    const options: RequestInit = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: jsonStringify(event),
+    };
+
+    try {
+      await fetch(this.postUrl, options);
+    } catch (e) {
+      error('Error found when publishing event %s: %O', event.id, e);
+      throw new Error('Unexpected error publishing event');
+    }
+  }
+}
+
+export interface Outbox {
+  publish(event: NostrEvent, relaySet?: NDKRelaySet): Promise<void>;
 }

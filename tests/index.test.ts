@@ -1,6 +1,6 @@
 import { Request, Response, RequestHandler, Router } from 'express';
 import NDK from '@nostr-dev-kit/ndk';
-import { Module, OutboxService } from '@src/index';
+import { Module, DirectOutbox } from '@src/index';
 import { EmptyRoutesError, setUpRoutes, setUpSubscriptions } from '@lib/utils';
 import { mockedNDK } from '@mocks/@nostr-dev-kit/ndk';
 import { mockAppListen } from '@mocks/express';
@@ -24,7 +24,7 @@ describe('Module', () => {
 
   it('should handle stop if it was never started', async () => {
     const module = Module.build({
-      context: { outbox: jest.fn() as unknown as OutboxService },
+      context: { outbox: jest.fn() as unknown as DirectOutbox },
       nostrPath: '',
       port: 1234,
       restPath: '',
@@ -35,7 +35,7 @@ describe('Module', () => {
 
   it('should use provided configuration', () => {
     const module = Module.build({
-      context: { outbox: jest.fn() as unknown as OutboxService },
+      context: { outbox: jest.fn() as unknown as DirectOutbox },
       nostrPath: '',
       port: 1234,
       restPath: '',

@@ -12,7 +12,7 @@ import 'websocket-polyfill';
 
 import { getReadNDK, getWriteNDK } from '@services/ndk';
 import NDK, { NDKRelay } from '@nostr-dev-kit/ndk';
-import { OutboxService } from '@services/outbox';
+import { DirectOutbox } from '@services/outbox';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -65,7 +65,7 @@ export class Module<Context extends DefaultContext = DefaultContext> {
     }
     return new Module({
       context: {
-        outbox: new OutboxService(getWriteNDK()),
+        outbox: new DirectOutbox(getWriteNDK()),
       } as DefaultContext,
       ...config,
     }) as Module<BuildContext>;
