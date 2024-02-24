@@ -8,7 +8,7 @@ const log: Debugger = logger.extend('rest:folder:param');
 
 const handler = (req: ExtendedRequest, res: Response) => {
   log(req.params);
-  res.status(200).json({ message: 'Test GET responde' }).send();
+  res.status(200).json({ message: 'Test GET response' }).send();
 };
 
 export default handler;
