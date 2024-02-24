@@ -1,11 +1,11 @@
 import NDK, { NDKRelay } from '@nostr-dev-kit/ndk';
-import { mockedNDKRelay } from '@mocks/@nostr-dev-kit/ndk';
+import { mockedNDKRelay } from '../../__mocks__/@nostr-dev-kit/ndk';
 import {
   connectToTempRelays,
   getReadNDK,
   getSignerNDK,
   getWriteNDK,
-} from '@services/ndk';
+} from '../../src/services/ndk';
 
 const now: number = 1231006505000;
 jest.useFakeTimers({ now });

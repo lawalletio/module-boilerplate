@@ -1,4 +1,4 @@
-import * as index from '@lib/middlewares';
+import * as index from '../../../src/lib/middlewares';
 
 describe('Index', (): void => {
   it('should have exports', (): void => {

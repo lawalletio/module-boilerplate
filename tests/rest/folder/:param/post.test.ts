@@ -1,5 +1,5 @@
-import post from '@rest/folder/:param/post';
-import { ExtendedRequest } from '@type/request';
+import post from '../../../../src/rest/folder/:param/post';
+import { ExtendedRequest } from '../../../../src/type/request';
 import type { Response } from 'express';
 
 describe('POST handler', () => {

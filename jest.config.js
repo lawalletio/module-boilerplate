@@ -35,14 +35,4 @@ module.exports =  {
     ]
   },
   maxWorkers: 1,
-  moduleNameMapper: {
-    "^@constants/(.*)$": '<rootDir>/src/constants/$1',
-    "^@lib/(.*)$": '<rootDir>/src/lib/$1',
-    "^@mocks/(.*)$": '<rootDir>/__mocks__/$1',
-    "^@nostr/(.*)$": '<rootDir>/src/nostr/$1',
-    "^@rest/(.*)$": '<rootDir>/src/rest/$1',
-    "^@services/(.*)$": '<rootDir>/src/services/$1',
-    "^@src/(.*)$": '<rootDir>/src/$1',
-    "^@type/(.*)$": '<rootDir>/src/type/$1',
-  },
 };

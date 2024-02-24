@@ -1,18 +1,18 @@
 import { Debugger } from 'debug';
 import express, { Application } from 'express';
-import * as middlewares from '@lib/middlewares';
+import * as middlewares from './lib/middlewares';
 import {
   EmptyRoutesError,
   logger,
   setUpRoutes,
   setUpSubscriptions,
-} from '@lib/utils';
-import { DefaultContext, ExtendedRequest } from '@type/request';
+} from './lib/utils';
+import { DefaultContext, ExtendedRequest } from './type/request';
 import 'websocket-polyfill';
 
-import { getReadNDK, getWriteNDK } from '@services/ndk';
+import { getReadNDK, getWriteNDK } from './services/ndk';
 import NDK, { NDKRelay } from '@nostr-dev-kit/ndk';
-import { DirectOutbox } from '@services/outbox';
+import { DirectOutbox } from './services/outbox';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';

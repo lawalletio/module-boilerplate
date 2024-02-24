@@ -1,6 +1,6 @@
 import NDK, { NDKEvent, NostrEvent } from '@nostr-dev-kit/ndk';
 
-import { nowInSeconds, requiredEnvVar } from '@lib/utils';
+import { nowInSeconds, requiredEnvVar } from './utils';
 
 const PUBLISH_INTERVAL = 60000; // 1 minute
 const tagName = (fileName: string): string => `lastHandled:${fileName}`;

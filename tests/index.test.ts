@@ -1,13 +1,13 @@
 import { Request, Response, RequestHandler, Router } from 'express';
 import NDK from '@nostr-dev-kit/ndk';
-import { Module, DirectOutbox } from '@src/index';
-import { EmptyRoutesError, setUpRoutes, setUpSubscriptions } from '@lib/utils';
-import { mockedNDK } from '@mocks/@nostr-dev-kit/ndk';
-import { mockAppListen } from '@mocks/express';
+import { Module, DirectOutbox } from '../src/index';
+import { EmptyRoutesError, setUpRoutes, setUpSubscriptions } from '../src/lib/utils';
+import { mockedNDK } from '../__mocks__/@nostr-dev-kit/ndk';
+import { mockAppListen } from '../__mocks__/express';
 
-jest.mock('@lib/utils', () => {
+jest.mock('../src/lib/utils', () => {
   const ogModule =
-    jest.requireActual<typeof import('@lib/utils')>('@lib/utils');
+    jest.requireActual<typeof import('../src/lib/utils')>('../src/lib/utils');
   return {
     __esModule: true,
     ...ogModule,

@@ -1,7 +1,7 @@
 import { Debugger } from 'debug';
 import NDK, { NDKEvent, NDKRelaySet, NostrEvent } from '@nostr-dev-kit/ndk';
 
-import { jsonStringify, logger } from '@lib/utils';
+import { jsonStringify, logger } from '../lib/utils';
 
 const log: Debugger = logger.extend('index');
 const error: Debugger = log.extend('warn');

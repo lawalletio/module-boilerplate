@@ -4,7 +4,7 @@ import NDK, {
   NDKRelaySet,
 } from '@nostr-dev-kit/ndk';
 
-import { logger, requiredEnvVar } from '@lib/utils';
+import { logger, requiredEnvVar } from '../lib/utils';
 import { Debugger } from 'debug';
 
 const log: Debugger = logger.extend('services:ndk');

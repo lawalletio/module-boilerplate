@@ -1,5 +1,5 @@
-import get from '@rest/folder/:param/get';
-import { ExtendedRequest } from '@type/request';
+import get from '../../../../src/rest/folder/:param/get';
+import { ExtendedRequest } from '../../../../src/type/request';
 import type { Response } from 'express';
 
 describe('GET handler', () => {

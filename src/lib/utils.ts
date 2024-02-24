@@ -5,10 +5,10 @@ import NDK, { NostrEvent } from '@nostr-dev-kit/ndk';
 import { v4 as uuidv4 } from 'uuid';
 
 import Path from 'path';
-import { DefaultContext } from '@type/request';
+import { DefaultContext } from '../type/request';
 export const logger: debug.Debugger = debug(process.env['MODULE_NAME'] || '');
-import LastHandledTracker from '@lib/lastHandled';
-import { SubHandling } from '@type/nostr';
+import LastHandledTracker from './lastHandled';
+import { SubHandling } from '../type/nostr';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 

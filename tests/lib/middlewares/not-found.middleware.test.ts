@@ -1,4 +1,4 @@
-import { notFound } from '@lib/middlewares/not-found.middleware';
+import { notFound } from '../../../src/lib/middlewares/not-found.middleware';
 import { NextFunction, Request, Response } from 'express';
 
 describe('Not found middleware', () => {

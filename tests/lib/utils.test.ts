@@ -15,13 +15,13 @@ import {
   shuffled,
   suuid2uuid,
   uuid2suuid,
-} from '@lib/utils';
-import { DefaultContext } from '@type/request';
+} from '../../src/lib/utils';
+import { DefaultContext } from '../../src/type/request';
 import NDK, { NDKSubscription } from '@nostr-dev-kit/ndk';
 import EventEmitter from 'events';
 import { Path, globSync } from 'glob';
 import { v4 } from 'uuid';
-import { mockRouteRes } from '@mocks/express';
+import { mockRouteRes } from '../../__mocks__/express';
 
 const now: number = 1231006505000;
 jest.useFakeTimers({ now });

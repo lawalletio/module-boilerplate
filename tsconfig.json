@@ -29,16 +29,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "dist/types",
-    "paths": {
-      "@constants/*": ["./src/constants/*"],
-      "@lib/*": ["./src/lib/*"],
-      "@nostr/*": ["./src/nostr/*"],
-      "@mocks/*": ["./__mocks__/*"],
-      "@rest/*": ["./src/rest/*"],
-      "@services/*": ["./src/services/*"],
-      "@src/*": ["./src/*"],
-      "@type/*": ["./src/type/*"]
-    },
     "preserveConstEnums": true,
     "removeComments": false,
     "resolveJsonModule": true,

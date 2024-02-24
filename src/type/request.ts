@@ -1,4 +1,4 @@
-import { DirectOutbox } from '@services/outbox';
+import { DirectOutbox } from '../services/outbox';
 import { Request } from 'express';
 
 export type DefaultContext = {

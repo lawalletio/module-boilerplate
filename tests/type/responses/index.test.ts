@@ -1,4 +1,4 @@
-import * as index from '@type/responses';
+import * as index from '../../../src/type/responses';
 
 describe('Index', (): void => {
   it('should have exports', (): void => {

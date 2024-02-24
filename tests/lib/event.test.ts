@@ -9,7 +9,7 @@ import {
   responseEvent,
   validateDelegation,
   validateDelegationConditions,
-} from '@lib/event';
+} from '../../src/lib/event';
 
 const now: number = 1231006505000;
 jest.useFakeTimers({ now });

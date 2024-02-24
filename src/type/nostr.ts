@@ -1,5 +1,5 @@
 import { NDKFilter, NostrEvent } from '@nostr-dev-kit/ndk';
-import { DefaultContext } from '@type/request';
+import { DefaultContext } from '../../src/type/request';
 
 export type EventHandler = (event: NostrEvent) => Promise<void>;
 

@@ -1,6 +1,6 @@
 import { NostrEvent } from '@nostr-dev-kit/ndk';
-import { getHandler } from '@nostr/subscriptionName';
-import { DefaultContext } from '@type/request';
+import { getHandler } from '../../src/nostr/subscriptionName';
+import { DefaultContext } from '../../src/type/request';
 
 describe('Nostr handler', () => {
   it('should handle received evenshould handle received event', async () => {

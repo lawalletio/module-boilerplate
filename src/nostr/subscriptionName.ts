@@ -2,8 +2,8 @@ import { Debugger } from 'debug';
 import type { NDKFilter, NostrEvent } from '@nostr-dev-kit/ndk';
 
 import { logger } from '../lib/utils';
-import { DefaultContext } from '@type/request';
-import { EventHandler } from '@type/nostr';
+import { DefaultContext } from '../type/request';
+import { EventHandler } from '../type/nostr';
 
 const log: Debugger = logger.extend('nostr:subscriptionName');
 

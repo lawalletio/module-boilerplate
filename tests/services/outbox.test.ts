@@ -1,6 +1,6 @@
 import NDK, { NDKRelaySet, NostrEvent } from '@nostr-dev-kit/ndk';
-import { ApiGatewayOutbox, DirectOutbox } from '@services/outbox';
-import { mockEventPublish } from '@mocks/@nostr-dev-kit/ndk';
+import { ApiGatewayOutbox, DirectOutbox } from '../../src/services/outbox';
+import { mockEventPublish } from '../../__mocks__/@nostr-dev-kit/ndk';
 
 describe('Outbox', () => {
   describe('Direct', () => {

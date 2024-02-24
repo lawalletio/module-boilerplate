@@ -14,7 +14,7 @@ import {
   nowInSeconds,
   requiredEnvVar,
   requiredProp,
-} from '@lib/utils';
+} from './utils';
 
 import {
   Cipher,

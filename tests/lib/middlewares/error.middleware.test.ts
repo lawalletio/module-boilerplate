@@ -1,5 +1,5 @@
-import { errorHandler } from '@lib/middlewares/error.middleware';
-import { ErrorResponseContract } from '@src/type/responses';
+import { errorHandler } from '../../../src/lib/middlewares/error.middleware';
+import { ErrorResponseContract } from '../../../src/type/responses';
 import { NextFunction, Request, Response } from 'express';
 
 describe('Error middleware', () => {

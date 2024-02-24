@@ -1,6 +1,6 @@
 import { Response, Request, NextFunction } from 'express';
-import { ErrorResponseContract } from '@type/responses';
-import { logger } from '@lib/utils';
+import { ErrorResponseContract } from '../../type/responses';
+import { logger } from '../utils';
 import { Debugger } from 'debug';
 
 const log: Debugger = logger.extend('lib:middlewares:error');
