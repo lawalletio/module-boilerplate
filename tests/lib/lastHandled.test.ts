@@ -1,7 +1,7 @@
 import NDK, { NDKEvent, NDKSubscription } from '@nostr-dev-kit/ndk';
 import LastHandledTracker from '../../src/lib/lastHandled';
 import EventEmitter from 'events';
-import { mockEventPublish } from '../../__mocks__/@nostr-dev-kit/ndk';
+import { mockEventPublish } from '../utils';
 
 const now: number = 1231006505000;
 jest.useFakeTimers({ now });

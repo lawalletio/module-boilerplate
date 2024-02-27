@@ -1,9 +1,12 @@
 import { Request, Response, RequestHandler, Router } from 'express';
 import NDK from '@nostr-dev-kit/ndk';
 import { Module, DirectOutbox } from '../src/index';
-import { EmptyRoutesError, setUpRoutes, setUpSubscriptions } from '../src/lib/utils';
-import { mockedNDK } from '../__mocks__/@nostr-dev-kit/ndk';
-import { mockAppListen } from '../__mocks__/express';
+import {
+  EmptyRoutesError,
+  setUpRoutes,
+  setUpSubscriptions,
+} from '../src/lib/utils';
+import { mockAppListen, mockedNDK } from './utils';
 
 jest.mock('../src/lib/utils', () => {
   const ogModule =
