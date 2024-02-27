@@ -1,8 +1,8 @@
-import { DirectOutbox } from '../services/outbox';
+import { Outbox } from '../services/outbox';
 import { Request } from 'express';
 
 export type DefaultContext = {
-  outbox: DirectOutbox;
+  outbox: Outbox;
 };
 
 export type ExtendedRequest<Context extends DefaultContext = DefaultContext> =
