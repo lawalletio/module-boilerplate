@@ -71,7 +71,7 @@ export class Module<Context extends DefaultContext = DefaultContext> {
     }) as Module<BuildContext>;
   }
 
-  start(): Promise<void> {
+  async start(): Promise<void> {
     this.#readNDK.pool.on('relay:connect', async (relay: NDKRelay) => {
       log('Connected to Relay %s', relay.url);
       log('Subscribing...');
@@ -106,35 +106,37 @@ export class Module<Context extends DefaultContext = DefaultContext> {
 
     // Generate routes
     log('Setting up routes... for %O', this.restPath);
-    return setUpRoutes(express.Router(), this.restPath)
-      .then((routes) => {
-        // Setup context
-        routes.use((req, _res, next) => {
-          (req as ExtendedRequest<Context>).context = this.context;
-          next();
-        });
-
-        // Setup express routes
-        this.app.use('/', routes);
-
-        // Setup express routes
-        this.app.use(middlewares.notFound);
-        this.app.use(middlewares.errorHandler);
-
-        //-- Start process --//
-
-        // Start listening
-        this.#server = this.app.listen(this.port, () => {
-          log(`Server is running on port ${this.port}`);
-        });
-      })
-      .catch((e: Error) => {
-        if (e instanceof EmptyRoutesError) {
-          log('Empty routes, this module will not be reachable by HTTP API');
-        } else {
-          throw e;
-        }
+    let routes;
+    try {
+      routes = await setUpRoutes(express.Router(), this.restPath);
+    } catch (e: unknown) {
+      if (e instanceof EmptyRoutesError) {
+        log('Empty routes, this module will not be reachable by HTTP API');
+      } else {
+        throw e;
+      }
+    }
+    if (routes) {
+      // Setup context
+      this.app.use((req, _res, next) => {
+        (req as ExtendedRequest<Context>).context = this.context;
+        next();
       });
+
+      // Setup express routes
+      this.app.use('/', routes);
+
+      // Setup express routes
+      this.app.use(middlewares.notFound);
+      this.app.use(middlewares.errorHandler);
+
+      //-- Start process --//
+
+      // Start listening
+      this.#server = this.app.listen(this.port, () => {
+        log(`Server is running on port ${this.port}`);
+      });
+    }
   }
 
   stop(): Promise<void> {
