@@ -99,7 +99,9 @@ export function responseEvent(
   resType: string,
   content: string,
   req?: NostrEvent,
+  kind?: number,
 ): NostrEvent {
+  kind ??= Kind.EPHEMERAL;
   let tags = [['t', resType]];
   if (req) {
     tags = tags.concat([
@@ -110,7 +112,7 @@ export function responseEvent(
   return {
     pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
     created_at: nowInSeconds(),
-    kind: Kind.EPHEMERAL,
+    kind,
     tags,
     content,
   };
