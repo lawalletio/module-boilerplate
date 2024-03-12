@@ -1,6 +1,8 @@
 # La Wallet Module
 
-This is a library intended to ease the quick development of backend modules that interact with other modules in the architecture described in [lawallet.io](https://lawallet.io/wallet-provider/architecture/system-architecture)
+This is a library intended to ease the quick development of backend
+modules that interact with other backend.modules in the architecture described
+in [lawallet.io](https://backend.lawallet.io/wallet-provider/architecture/system-architecture)
 
 ## Installation
 
