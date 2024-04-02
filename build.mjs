@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#! /usr/bin/env node
 
 import { writeFileSync } from 'fs';
 
@@ -32,4 +32,3 @@ for (const arg of process.argv) {
       );
   }
 }
-

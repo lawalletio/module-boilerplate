@@ -1,9 +1,9 @@
-import { mockEventPublish, mockedNDK, mockedNDKRelay } from "../../tests/utils";
+import { mockEventPublish, mockedNDK, mockedNDKRelay } from '../../tests/utils';
 
 export const NDKEvent = jest.fn().mockImplementation(() => {
   return {
     publish: mockEventPublish,
-  }
+  };
 });
 
 export const NDKPrivateKeySigner = jest.fn();

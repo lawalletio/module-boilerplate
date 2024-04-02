@@ -41,5 +41,5 @@
     "typeRoots": ["./node_modules/@types"],
     "useDefineForClassFields": true
   },
-  "include": ["src/**/*", "tests/**/*",  "./__mocks__/**/*"]
+  "include": ["src/**/*", "tests/**/*", "__mocks__/**/*"]
 }

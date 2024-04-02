@@ -1,4 +1,4 @@
-import { mockAppListen, mockRouteRes } from "../tests/utils";
+import { mockAppListen, mockRouteRes } from '../tests/utils';
 
 const expressMock = () => ({
   listen: mockAppListen,

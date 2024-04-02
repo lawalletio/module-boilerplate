@@ -8,12 +8,21 @@
     "plugin:@typescript-eslint/strict-type-checked",
     "prettier"
   ],
-  "ignorePatterns": ["pnpm-lock.yaml", "dist/"],
+  "ignorePatterns": [
+    "pnpm-lock.yaml",
+    "dist/"
+  ],
   "overrides": [
     {
-      "files": ["tests/**"],
-      "plugins": ["jest"],
-      "extends": ["plugin:jest/recommended"],
+      "files": [
+        "tests/**"
+      ],
+      "plugins": [
+        "jest"
+      ],
+      "extends": [
+        "plugin:jest/recommended"
+      ],
       "rules": {
         "@typescript-eslint/unbound-method": "off",
         "jest/unbound-method": "error"
@@ -24,7 +33,10 @@
   "parserOptions": {
     "project": "./tsconfig.eslint.json"
   },
-  "plugins": ["import", "@typescript-eslint"],
+  "plugins": [
+    "import",
+    "@typescript-eslint"
+  ],
   "root": true,
   "rules": {
     "@typescript-eslint/no-non-null-assertion": 0,
@@ -49,7 +61,9 @@
   },
   "settings": {
     "import/parsers": {
-      "@typescript-eslint/parser": [".ts"]
+      "@typescript-eslint/parser": [
+        ".ts"
+      ]
     },
     "import/resolver": {
       "typescript": {}
