@@ -45,7 +45,7 @@ export class ApiGatewayOutbox implements Outbox {
 
     try {
       await fetch(this.postUrl, options);
-    } catch (e) {
+    } catch (e: unknown) {
       error('Error found when publishing event %s: %O', event.id, e);
       throw new Error('Unexpected error publishing event');
     }

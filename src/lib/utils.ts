@@ -182,7 +182,7 @@ export async function setUpSubscriptions<
               getHandler(ctx, 0);
             await handler(nostrEvent);
             lastHandledTracker!.hit(file, nostrEvent.created_at);
-          } catch (e) {
+          } catch (e: unknown) {
             warn(
               `Unexpected exception found when handling ${matches.groups?.['name'] ?? 'UNKNOWN'}: %O`,
               e,
@@ -292,7 +292,7 @@ export function jsonParseOrNull<T>(
 ): T | null {
   try {
     return JSON.parse(text, reviver) as T;
-  } catch (_e) {
+  } catch (_e: unknown) {
     return null;
   }
 }
