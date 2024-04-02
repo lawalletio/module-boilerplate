@@ -72,19 +72,23 @@ export class Module<Context extends DefaultContext = DefaultContext> {
   }
 
   async start(): Promise<void> {
-    this.#readNDK.pool.on('relay:connect', async (relay: NDKRelay) => {
+    this.#readNDK.pool.on('relay:connect', (relay: NDKRelay) => {
       log('Connected to Relay %s', relay.url);
       log('Subscribing...');
-      const subscribed = await setUpSubscriptions<Context>(
+      setUpSubscriptions<Context>(
         this.context,
         this.#readNDK,
         this.#writeNDK,
         this.nostrPath,
-      );
-
-      if (null === subscribed) {
-        throw new Error('Error setting up subscriptions');
-      }
+      )
+        .then((value: NDK | null) => {
+          if (null === value) {
+            throw new Error('Error setting up subscriptions');
+          }
+        })
+        .catch((e: unknown) => {
+          throw e;
+        });
     });
 
     this.#readNDK.pool.on('relay:disconnect', (relay: NDKRelay) => {
