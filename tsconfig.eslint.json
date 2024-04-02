@@ -2,8 +2,8 @@
   "extends": "./tsconfig.json",
   "include": [
     "./build.mjs",
+    "./jest.config.mjs",
     "./tests/**/*",
     "./src/**/*",
-    "./jest.config.js"
   ]
 }

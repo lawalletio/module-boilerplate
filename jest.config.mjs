@@ -1,12 +1,12 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
-module.exports =  {
+export default {
   clearMocks: true,
   collectCoverage: true,
   collectCoverageFrom: ['<rootDir>/src/**/*.ts'],
   coveragePathIgnorePatterns: ['\\.test\\.ts'],
   coverageDirectory: '<rootDir>/dist/.coverage',
   coverageProvider: 'babel',
-  extensionsToTreatAsEsm: [".ts"],
+  extensionsToTreatAsEsm: ['.ts'],
   logHeapUsage: true,
   passWithNoTests: true,
   //preset: 'ts-jest',
@@ -14,7 +14,7 @@ module.exports =  {
   resetModules: true,
   restoreMocks: false,
   rootDir: '.',
-  setupFiles: [ 'dotenv/config' ],
+  setupFiles: ['dotenv/config'],
   testEnvironment: 'node',
   testMatch: ['<rootDir>/tests/**/*.test.ts'],
   transform: {
@@ -22,17 +22,17 @@ module.exports =  {
       'ts-jest',
       {
         diagnostics: {
-          ignoreCodes: [1343]
+          ignoreCodes: [1343],
         },
         astTransformers: {
           before: [
             {
-              path: 'ts-jest-mock-import-meta'
-            }
-          ]
-        }
-      }
-    ]
+              path: 'ts-jest-mock-import-meta',
+            },
+          ],
+        },
+      },
+    ],
   },
   maxWorkers: 1,
 };
