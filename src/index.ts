@@ -97,10 +97,10 @@ export class Module<Context extends DefaultContext = DefaultContext> {
 
     // Connect to Nostr
     log('Connecting to Nostr...');
-    this.#readNDK.connect().catch((e) => {
+    this.#readNDK.connect().catch((e: unknown) => {
       warn('Error connecting to read relay: %o', e);
     });
-    this.#writeNDK.connect().catch((e) => {
+    this.#writeNDK.connect().catch((e: unknown) => {
       warn('Error connecting to write relay: %o', e);
     });
 

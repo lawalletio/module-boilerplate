@@ -22,7 +22,7 @@ export class DirectOutbox implements Outbox {
             resolve();
           }
         })
-        .catch((e) => {
+        .catch((e: unknown) => {
           error('Error found when publishing event %s: %O', event.id, e);
           reject(new Error('Unexpected error publishing event'));
         });

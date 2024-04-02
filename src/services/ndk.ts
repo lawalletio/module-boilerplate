@@ -85,7 +85,7 @@ export function connectToTempRelays(
       tempRelay.timer = timer;
     } else {
       const relay = new NDKRelay(url);
-      relay.connect().catch((e) => {
+      relay.connect().catch((e: unknown) => {
         warn('Error connecting to relay %s: %O', url, e);
         removeTempRelay(url);
       });
