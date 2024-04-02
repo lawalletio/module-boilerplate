@@ -99,7 +99,7 @@ export async function setUpRoutes(
 
     if (matches?.groups) {
       const method: RouteMethod = matches.groups['method'] as RouteMethod;
-      const route: string = `/${matches.groups['route']}`;
+      const route: string = `/${matches.groups['route']!}`;
       const handler = (
         (await import(Path.resolve(rootPath, modulePath))) as {
           default: RequestHandler;
@@ -184,13 +184,13 @@ export async function setUpSubscriptions<
             lastHandledTracker!.hit(file, nostrEvent.created_at);
           } catch (e) {
             warn(
-              `Unexpected exception found when handling ${matches.groups?.['name']}: %O`,
+              `Unexpected exception found when handling ${matches.groups?.['name'] ?? 'UNKNOWN'}: %O`,
               e,
             );
           }
         });
 
-      log(`Created ${matches.groups['name']} subscription`);
+      log(`Created ${matches.groups['name'] ?? 'UNKNOWN'} subscription`);
     } else {
       warn(
         `Skipping ${file} as it doesn't comply to subscription conventions.`,
@@ -250,7 +250,7 @@ export function uuid2suuid(uuid: string): string | null {
     .reduce((acc: bigint, curr: bigint) => acc * 256n + curr);
   let suuid: string = '';
   do {
-    [suuid, n] = [sAlpha[Number(n % sAlphaLength)] + suuid, n / sAlphaLength];
+    [suuid, n] = [sAlpha[Number(n % sAlphaLength)]! + suuid, n / sAlphaLength];
   } while (n);
   return suuid.padStart(22, sAlpha[0]);
 }
