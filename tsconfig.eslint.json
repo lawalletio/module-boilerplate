@@ -3,7 +3,8 @@
   "include": [
     "./build.mjs",
     "./jest.config.mjs",
-    "./tests/**/*",
+    "./__mocks__/**/*",
     "./src/**/*",
+    "./tests/**/*"
   ]
 }
