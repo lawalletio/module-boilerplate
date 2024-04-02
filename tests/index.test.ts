@@ -174,7 +174,7 @@ describe('Module', () => {
     expect(mockAppListen).not.toHaveBeenCalled();
   });
 
-  it('should throw error when setting up routes failed forn unknown reasons', async () => {
+  it('should throw error when setting up routes failed for unknown reasons', async () => {
     jest.mocked(setUpSubscriptions).mockResolvedValueOnce(new NDK());
     jest.mocked(setUpRoutes).mockRejectedValue(new Error());
 
