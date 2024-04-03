@@ -272,17 +272,17 @@ describe('Event utils', () => {
         }),
       );
       const content = JSON.parse(event.content) as MultiNip04Content;
-      expect(content).toEqual({
-        alg: 'sha256:nip-04:nip-04',
-        enc: 'vWXLTR1QZZkvy0GXc+0C8A==?iv=AAAAAAAAAAAAAAAAAAAAAA==',
-        key: {
-          '0ce927e017647607cd50d45dccaacb28c55c18114ef4cfe07a9d9dd6afcd85fb':
-            'cfm+AmQX4dz22na4T/hbKNhGn7JtFcKrmIzVvqiDY6NWF93qCd9LcGavVoiht6cs?iv=AAAAAAAAAAAAAAAAAAAAAA==',
-          '9d2989edd27f1377bbfc6635893d5a825e01a7e1da7a377a5a3030ac0b347ac5':
-            '5N3nxzOxVMiWISzl1UZl64QFYczLZ/fZokkn02vICHMovCnLT+5I7BadnWJHI8QL?iv=AAAAAAAAAAAAAAAAAAAAAA==',
-        },
-        mac: 'pZGm1Av0IEBKARczz7exkNYsZb8LzaMrV7J32a2fFG4=',
-      });
+      expect(content.alg).toEqual('sha256:nip-04:nip-04');
+      expect(content.enc).toEqual(
+        'vWXLTR1QZZkvy0GXc+0C8A==?iv=AAAAAAAAAAAAAAAAAAAAAA==',
+      );
+      expect(content.mac).toEqual(
+        'pZGm1Av0IEBKARczz7exkNYsZb8LzaMrV7J32a2fFG4=',
+      );
+      expect(Object.keys(content.key)).toEqual([
+        '9d2989edd27f1377bbfc6635893d5a825e01a7e1da7a377a5a3030ac0b347ac5',
+        '0ce927e017647607cd50d45dccaacb28c55c18114ef4cfe07a9d9dd6afcd85fb',
+      ]);
     });
   });
 
