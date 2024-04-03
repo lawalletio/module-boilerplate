@@ -28,7 +28,9 @@ export class DuplicateRoutesError extends Error {}
 const methods: RouteMethod[] = ['get', 'post', 'put', 'patch', 'delete'];
 
 function getPathsByExtensions(path: string, extensions: string[]): gPath[] {
-  const extensionsSet = new Set(extensions.map((e) => `.${e.toLowerCase()}`));
+  const extensionsSet: Set<string> = new Set(
+    extensions.map((e: string): string => `.${e.toLowerCase()}`),
+  );
 
   return globSync('*', {
     withFileTypes: true,
@@ -36,7 +38,7 @@ function getPathsByExtensions(path: string, extensions: string[]): gPath[] {
     matchBase: true,
     nocase: true,
     nodir: true,
-  }).filter((p) => {
+  }).filter((p: gPath): boolean => {
     return extensionsSet.has(Path.extname(p.name).toLowerCase());
   });
 }
@@ -52,18 +54,14 @@ function relativeReplacingInDirs(path: gPath, reg: RegExp, s: string): string {
 
 function findDuplicates(values: gPath[]): string[] {
   const counter: { [key: string]: number } = {};
-  const duplicates: string[] = [];
 
-  values.forEach((value) => {
-    counter[value.relative()] = (counter[value.relative()] ?? 0) + 1;
+  values.forEach((value: gPath): void => {
+    const relative = value.relative();
+    counter[relative] = (counter[relative] ?? 0) + 1;
   });
-  for (const [key, count] of Object.entries(counter)) {
-    if (1 < count) {
-      duplicates.push(key);
-    }
-  }
-
-  return duplicates;
+  return Object.entries(counter)
+    .filter(([_key, count]: [string, number]): boolean => 1 < count)
+    .map(([key, _count]: [string, number]): string => key);
 }
 
 export async function setUpRoutes(
@@ -74,6 +72,8 @@ export async function setUpRoutes(
     'cjs',
     'mjs',
     'js',
+    'cts',
+    'mts',
     'ts',
   ]);
   const duplicates = findDuplicates(paths);
@@ -135,15 +135,22 @@ export async function setUpRoutes(
   return router;
 }
 
-export async function setUpSubscriptions<
+export async function getAllHandlers<
   Context extends DefaultContext = DefaultContext,
 >(
-  ctx: Context,
-  readNdk: NDK,
   writeNDK: NDK,
   path: string,
-): Promise<NDK | null> {
-  const paths: gPath[] = getPathsByExtensions(path, ['cjs', 'mjs', 'js', 'ts']);
+): Promise<{
+  [name: string]: SubHandling<Context>;
+} | null> {
+  const paths: gPath[] = getPathsByExtensions(path, [
+    'cjs',
+    'mjs',
+    'js',
+    'mts',
+    'cts',
+    'ts',
+  ]);
   const duplicates = findDuplicates(paths);
 
   if (duplicates.length) {
@@ -152,19 +159,22 @@ export async function setUpSubscriptions<
     });
     return null;
   }
-  const allFiles: string[] = paths.map((p) => p.relative());
+  const allFiles: string[] = paths.map((p: gPath): string => p.relative());
 
   if (!lastHandledTracker && 0 < paths.length) {
     lastHandledTracker = new LastHandledTracker(writeNDK, allFiles);
     await lastHandledTracker.fetchLastHandled();
   }
 
+  // throw new Error(JSON.stringify(allFiles));
+  const result: {
+    [name: string]: SubHandling<Context>;
+  } = {};
   for (const file of allFiles) {
-    const matches = file.match(/^(?<name>[^/]*)$/i);
     const lastHandled: number = lastHandledTracker!.get(file);
 
-    if (matches?.groups) {
-      const { filter, getHandler } = (await import(
+    if (/^(?<name>[^/]*)$/i.test(file)) {
+      const { filter, getHandler }: SubHandling<Context> = (await import(
         Path.resolve(path, file)
       )) as SubHandling<Context>;
       if (lastHandled) {
@@ -172,25 +182,7 @@ export async function setUpSubscriptions<
       } else {
         delete filter.since;
       }
-      readNdk
-        .subscribe(filter, {
-          closeOnEose: false,
-        })
-        .on('event', async (nostrEvent: NostrEvent): Promise<void> => {
-          try {
-            const handler: (nostrEvent: NostrEvent) => Promise<void> =
-              getHandler(ctx, 0);
-            await handler(nostrEvent);
-            lastHandledTracker!.hit(file, nostrEvent.created_at);
-          } catch (e: unknown) {
-            warn(
-              `Unexpected exception found when handling ${matches.groups?.['name'] ?? 'UNKNOWN'}: %O`,
-              e,
-            );
-          }
-        });
-
-      log(`Created ${matches.groups['name'] ?? 'UNKNOWN'} subscription`);
+      result[file] = { filter, getHandler };
     } else {
       warn(
         `Skipping ${file} as it doesn't comply to subscription conventions.`,
@@ -198,6 +190,33 @@ export async function setUpSubscriptions<
     }
   }
 
+  return result;
+}
+
+export function subscribeToAll<Context extends DefaultContext = DefaultContext>(
+  ctx: Context,
+  readNdk: NDK,
+  handlers: {
+    [name: string]: SubHandling<Context>;
+  },
+): NDK | null {
+  //
+  Object.entries(handlers).forEach(
+    ([name, { filter, getHandler }]: [string, SubHandling<Context>]): void => {
+      readNdk
+        .subscribe(filter, { closeOnEose: false })
+        .on('event', async (nostrEvent: NostrEvent): Promise<void> => {
+          try {
+            await getHandler(ctx, 0)(nostrEvent);
+            lastHandledTracker!.hit(name, nostrEvent.created_at);
+          } catch (e: unknown) {
+            warn(`Unexpected exception found when handling ${name}: %O`, e);
+          }
+        });
+
+      log(`Created ${name} subscription`);
+    },
+  );
   return readNdk;
 }
 

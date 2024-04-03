@@ -11,14 +11,10 @@ import {
   requiredEnvVar,
   requiredProp,
   setUpRoutes,
-  setUpSubscriptions,
   shuffled,
   suuid2uuid,
   uuid2suuid,
 } from '../../src/lib/utils';
-import { DefaultContext } from '../../src/type/request';
-import NDK, { NDKSubscription } from '@nostr-dev-kit/ndk';
-import EventEmitter from 'events';
 import { Path, globSync } from 'glob';
 import { v4 } from 'uuid';
 import { mockRouteRes } from '../utils';
@@ -178,81 +174,6 @@ describe('utils', () => {
       );
       expect(mockRouteRes.status).toHaveBeenCalledTimes(15);
       expect(mockRouteRes.status).toHaveBeenCalledWith(405);
-    });
-  });
-
-  describe('setUpSubscriptions', () => {
-    it('should return null when there are duplicates', async () => {
-      jest
-        .mocked<typeof globSync>(globSync)
-        .mockReturnValueOnce([globPath('hello.ts'), globPath('hello.ts')]);
-
-      const ndk = await setUpSubscriptions(
-        {} as DefaultContext,
-        {} as NDK,
-        {} as NDK,
-        '',
-      );
-
-      expect(ndk).toBeNull();
-    });
-
-    it('should set up subscription correctly', async () => {
-      const handler1 = jest.fn();
-      const handler2 = jest.fn();
-      jest.mock(
-        '../../handler1.js',
-        () => {
-          return { filter: {}, getHandler: () => handler1 };
-        },
-        { virtual: true },
-      );
-      jest.mock(
-        '../../handler2.js',
-        () => {
-          return { filter: {}, getHandler: handler2 };
-        },
-        { virtual: true },
-      );
-      jest
-        .mocked<typeof globSync>(globSync)
-        .mockReturnValueOnce([
-          globPath('handler1.js'),
-          globPath('handler2.js'),
-          globPath('Invalid/handler/this.ts'),
-        ]);
-      const ctx = {} as DefaultContext;
-      const mockSub = jest.fn();
-      const readNDK = {
-        subscribe: mockSub,
-      } as unknown as NDK;
-      const writeNDK = {
-        subscribe: mockSub,
-      } as unknown as NDK;
-      const mockSubTracker = new EventEmitter() as unknown as NDKSubscription;
-      const mockSubHandler = new EventEmitter() as unknown as NDKSubscription;
-      mockSub
-        .mockReturnValueOnce(mockSubTracker)
-        .mockReturnValue(mockSubHandler);
-
-      const ndkPromise = setUpSubscriptions(ctx, readNDK, writeNDK, '');
-      mockSubTracker.emit('event', {
-        content: '100',
-        created_at: now / 1000 + 60,
-        kind: 31111,
-        pubkey: process.env['NOSTR_PUBLIC_KEY'],
-        tags: [['d', 'lastHandled:handler1.js']],
-      });
-      mockSubTracker.emit('eose');
-      mockSubHandler.emit('event', {});
-      await Promise.resolve();
-      const ndk = await ndkPromise;
-      mockSubHandler.emit('event', {});
-      await Promise.resolve();
-
-      expect(ndk).toBe(readNDK);
-      expect(handler1).toHaveBeenCalled();
-      expect(handler2).toHaveBeenCalled();
     });
   });
 

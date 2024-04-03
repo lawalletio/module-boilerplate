@@ -3,9 +3,10 @@ import express, { Application } from 'express';
 import * as middlewares from './lib/middlewares';
 import {
   EmptyRoutesError,
+  getAllHandlers,
   logger,
   setUpRoutes,
-  setUpSubscriptions,
+  subscribeToAll,
 } from './lib/utils';
 import { DefaultContext, ExtendedRequest } from './type/request';
 import 'websocket-polyfill';
@@ -17,6 +18,7 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
 import { Server } from 'http';
+import { SubHandling } from './type/nostr';
 
 const log: Debugger = logger.extend('index');
 const warn: Debugger = log.extend('warn');
@@ -72,23 +74,17 @@ export class Module<Context extends DefaultContext = DefaultContext> {
   }
 
   async start(): Promise<void> {
-    this.#readNDK.pool.on('relay:connect', (relay: NDKRelay) => {
+    const allHandlers: {
+      [name: string]: SubHandling<Context>;
+    } | null = await getAllHandlers<Context>(this.#writeNDK, this.nostrPath);
+    if (null === allHandlers) {
+      throw new Error('Error setting up subscriptions');
+    }
+
+    this.#readNDK.pool.on('relay:connect', (relay: NDKRelay): void => {
       log('Connected to Relay %s', relay.url);
       log('Subscribing...');
-      setUpSubscriptions<Context>(
-        this.context,
-        this.#readNDK,
-        this.#writeNDK,
-        this.nostrPath,
-      )
-        .then((value: NDK | null) => {
-          if (null === value) {
-            throw new Error('Error setting up subscriptions');
-          }
-        })
-        .catch((e: unknown) => {
-          throw e;
-        });
+      subscribeToAll<Context>(this.context, this.#readNDK, allHandlers);
     });
 
     this.#readNDK.pool.on('relay:disconnect', (relay: NDKRelay) => {

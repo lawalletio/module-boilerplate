@@ -3,8 +3,9 @@ import NDK from '@nostr-dev-kit/ndk';
 import { Module, DirectOutbox } from '../src/index';
 import {
   EmptyRoutesError,
+  getAllHandlers,
   setUpRoutes,
-  setUpSubscriptions,
+  subscribeToAll,
 } from '../src/lib/utils';
 import { mockAppListen, mockedNDK } from './utils';
 
@@ -15,13 +16,15 @@ jest.mock('../src/lib/utils', () => {
     __esModule: true,
     ...ogModule,
     setUpRoutes: jest.fn(),
-    setUpSubscriptions: jest.fn(),
+    getAllHandlers: jest.fn(),
+    subscribeToAll: jest.fn(),
   };
 });
 describe('Module', () => {
   beforeEach(() => {
     jest.mocked(setUpRoutes).mockReset();
-    jest.mocked(setUpSubscriptions).mockReset();
+    jest.mocked(getAllHandlers).mockReset();
+    jest.mocked(subscribeToAll).mockReset();
     mockAppListen.mockReset();
   });
 
@@ -55,7 +58,8 @@ describe('Module', () => {
       }),
     } as unknown as Router;
     jest.mocked(setUpRoutes).mockResolvedValue(mockRouter);
-    jest.mocked(setUpSubscriptions).mockResolvedValueOnce(new NDK());
+    jest.mocked(getAllHandlers).mockResolvedValue({});
+    jest.mocked(subscribeToAll).mockReturnValue(new NDK());
     let connectFn;
     mockedNDK.pool.on.mockImplementation(
       (event: string, fn: (arg0: { url: string }) => void) => {
@@ -90,7 +94,8 @@ describe('Module', () => {
     await module.start();
 
     expect(connectFn).not.toThrow();
-    expect(setUpSubscriptions).toHaveBeenCalled();
+    expect(getAllHandlers).toHaveBeenCalled();
+    expect(subscribeToAll).toHaveBeenCalled();
     expect(setUpRoutes).toHaveBeenCalled();
     expect(mockAppListen).toHaveBeenCalled();
 
@@ -117,34 +122,24 @@ describe('Module', () => {
         return mockRouter;
       }),
     } as unknown as Router;
-    jest.mocked(setUpSubscriptions).mockResolvedValueOnce(null);
     jest.mocked(setUpRoutes).mockResolvedValueOnce(mockRouter);
-    let connectFn: Promise<void> | undefined;
-    mockedNDK.pool.on.mockImplementation(
-      (event: string, fn: (arg0: { url: string }) => Promise<void>) => {
-        if ('relay:connect' === event) {
-          connectFn = fn({ url: '' });
-        } else {
-          void fn({ url: '' });
-        }
-      },
-    );
-    mockedNDK.connect.mockRejectedValue('');
+    jest.mocked(getAllHandlers).mockResolvedValue(null);
 
-    await Module.build({
+    const module = Module.build({
       nostrPath: '',
       restPath: '',
-    }).start();
+    });
 
-    await expect(connectFn).rejects.toEqual(
+    await expect(() => module.start()).rejects.toEqual(
       new Error('Error setting up subscriptions'),
     );
-    expect(setUpSubscriptions).toHaveBeenCalled();
+    expect(getAllHandlers).toHaveBeenCalled();
   });
 
   it('should not start express if routes are empty', async () => {
     jest.mocked(setUpRoutes).mockRejectedValue(new EmptyRoutesError());
-    jest.mocked(setUpSubscriptions).mockResolvedValueOnce(new NDK());
+    jest.mocked(getAllHandlers).mockResolvedValue({});
+    jest.mocked(subscribeToAll).mockReturnValue(new NDK());
     let connectFn;
     mockedNDK.pool.on.mockImplementation(
       (event: string, fn: (arg0: { url: string }) => void) => {
@@ -169,13 +164,15 @@ describe('Module', () => {
     }).start();
 
     expect(connectFn).not.toThrow();
-    expect(setUpSubscriptions).toHaveBeenCalled();
+    expect(getAllHandlers).toHaveBeenCalled();
+    expect(subscribeToAll).toHaveBeenCalled();
     expect(setUpRoutes).toHaveBeenCalled();
     expect(mockAppListen).not.toHaveBeenCalled();
   });
 
   it('should throw error when setting up routes failed for unknown reasons', async () => {
-    jest.mocked(setUpSubscriptions).mockResolvedValueOnce(new NDK());
+    jest.mocked(getAllHandlers).mockResolvedValue({});
+    jest.mocked(subscribeToAll).mockReturnValue(new NDK());
     jest.mocked(setUpRoutes).mockRejectedValue(new Error());
 
     await expect(
