@@ -17,6 +17,9 @@ const buildOptions = {
   format: 'esm',
   outfile: './dist/index.mjs',
   packages: 'external',
+  logOverride: {
+    'unsupported-dynamic-import': 'silent',
+  },
 };
 
 for (const arg of process.argv) {
