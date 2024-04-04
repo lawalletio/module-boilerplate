@@ -161,7 +161,7 @@ export async function getAllHandlers<
   }
   const allFiles: string[] = paths.map((p: gPath): string => p.relative());
 
-  if (!lastHandledTracker && 0 < paths.length) {
+  if (!lastHandledTracker && 0 < allFiles.length) {
     lastHandledTracker = new LastHandledTracker(writeNDK, allFiles);
     await lastHandledTracker.fetchLastHandled();
   }
