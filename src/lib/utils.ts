@@ -202,7 +202,7 @@ export function subscribeToAll<Context extends DefaultContext = DefaultContext>(
       }
 
       readNdk
-        .subscribe(filter, { closeOnEose: false })
+        .subscribe(filter, { closeOnEose: false, subId: name })
         .on('event', async (nostrEvent: NostrEvent): Promise<void> => {
           try {
             await getHandler(ctx, 0)(nostrEvent);
