@@ -42,7 +42,7 @@ export function getReadNDK(): NDK {
 export function getWriteNDK(): NDK {
   if (!writeNDK) {
     writeNDK = new NDK({
-      explicitRelayUrls: [requiredEnvVar('NOSTR_WRITE_RELAY')],
+      explicitRelayUrls: requiredEnvVar('NOSTR_WRITE_RELAYS').split(','),
       signer: new NDKPrivateKeySigner(requiredEnvVar('NOSTR_PRIVATE_KEY')),
     });
   }
