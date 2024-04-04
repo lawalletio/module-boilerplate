@@ -74,6 +74,22 @@ export class Module<Context extends DefaultContext = DefaultContext> {
   }
 
   async start(): Promise<void> {
+    this.#writeNDK.pool.on('relay:connect', (relay: NDKRelay): void => {
+      log('Connected to Write Relay %s', relay.url);
+    });
+
+    this.#writeNDK.pool.on('relay:disconnect', (relay: NDKRelay) => {
+      log('Disconnected from Write Relay %s', relay.url);
+    });
+
+    this.#writeNDK.on('error', (err) => {
+      log('Error connecting to Write Relay', err);
+    });
+
+    await this.#writeNDK.connect().catch((e: unknown) => {
+      warn('Error connecting to Write Relay: %o', e);
+    });
+
     const allHandlers: {
       [name: string]: SubHandling<Context>;
     } | null = await getAllHandlers<Context>(this.#writeNDK, this.nostrPath);
@@ -82,26 +98,23 @@ export class Module<Context extends DefaultContext = DefaultContext> {
     }
 
     this.#readNDK.pool.on('relay:connect', (relay: NDKRelay): void => {
-      log('Connected to Relay %s', relay.url);
+      log('Connected to Read Relay %s', relay.url);
       log('Subscribing...');
       subscribeToAll<Context>(this.context, this.#readNDK, allHandlers);
     });
 
     this.#readNDK.pool.on('relay:disconnect', (relay: NDKRelay) => {
-      log('Disconnected from relay %s', relay.url);
+      log('Disconnected from Read Relay %s', relay.url);
     });
 
     this.#readNDK.on('error', (err) => {
-      log('Error connecting to Relay', err);
+      log('Error connecting to Read Relay', err);
     });
 
     // Connect to Nostr
     log('Connecting to Nostr...');
-    this.#readNDK.connect().catch((e: unknown) => {
-      warn('Error connecting to read relay: %o', e);
-    });
-    this.#writeNDK.connect().catch((e: unknown) => {
-      warn('Error connecting to write relay: %o', e);
+    await this.#readNDK.connect().catch((e: unknown) => {
+      warn('Error connecting to Read Relay: %o', e);
     });
 
     // Generate routes
