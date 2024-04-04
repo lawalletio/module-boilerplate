@@ -1,6 +1,6 @@
 {
   "name": "@lawallet/module",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "LaWallet Module",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
