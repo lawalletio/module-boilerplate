@@ -166,7 +166,6 @@ export async function getAllHandlers<
     await lastHandledTracker.fetchLastHandled();
   }
 
-  // throw new Error(JSON.stringify(allFiles));
   const result: {
     [name: string]: SubHandling<Context>;
   } = {};
