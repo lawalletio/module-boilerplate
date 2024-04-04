@@ -170,18 +170,10 @@ export async function getAllHandlers<
     [name: string]: SubHandling<Context>;
   } = {};
   for (const file of allFiles) {
-    const lastHandled: number = lastHandledTracker!.get(file);
-
     if (/^(?<name>[^/]*)$/i.test(file)) {
-      const { filter, getHandler }: SubHandling<Context> = (await import(
+      result[file] = (await import(
         Path.resolve(path, file)
       )) as SubHandling<Context>;
-      if (lastHandled) {
-        filter.since = lastHandled - CREATED_AT_TOLERANCE;
-      } else {
-        delete filter.since;
-      }
-      result[file] = { filter, getHandler };
     } else {
       warn(
         `Skipping ${file} as it doesn't comply to subscription conventions.`,
@@ -202,6 +194,13 @@ export function subscribeToAll<Context extends DefaultContext = DefaultContext>(
   //
   Object.entries(handlers).forEach(
     ([name, { filter, getHandler }]: [string, SubHandling<Context>]): void => {
+      const lastHandled: number = lastHandledTracker!.get(name);
+      if (lastHandled) {
+        filter.since = lastHandled - CREATED_AT_TOLERANCE;
+      } else {
+        delete filter.since;
+      }
+
       readNdk
         .subscribe(filter, { closeOnEose: false })
         .on('event', async (nostrEvent: NostrEvent): Promise<void> => {
