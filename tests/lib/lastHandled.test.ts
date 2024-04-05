@@ -100,6 +100,7 @@ describe('Last Handled', () => {
         connected: 1,
         connecting: 0,
       });
+      mockEventPublish.mockImplementation(() => Promise.resolve());
 
       tracker.hit('handler2', 100);
       tracker.hit('handler3', 101);
@@ -153,6 +154,7 @@ describe('Last Handled', () => {
         connected: 1,
         connecting: 0,
       });
+      mockEventPublish.mockImplementation(() => Promise.resolve());
       const mockSubscribe = new EventEmitter() as unknown as NDKSubscription;
       mockedSub.mockReturnValue(mockSubscribe);
 

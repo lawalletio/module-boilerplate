@@ -1,6 +1,10 @@
 import NDK, { NDKEvent, NostrEvent } from '@nostr-dev-kit/ndk';
 
-import { nowInSeconds, requiredEnvVar } from './utils';
+import { logger, nowInSeconds, requiredEnvVar } from './utils';
+import { Debugger } from 'debug';
+
+const log: Debugger = logger.extend('lib:lastHandled');
+const warn: Debugger = log.extend('warn');
 
 const PUBLISH_INTERVAL = 60000; // 1 minute
 const tagName = (fileName: string): string => `lastHandled:${fileName}`;
@@ -21,7 +25,9 @@ function publishLastHandled(ndk: NDK, tracker: LastHandledTracker): void {
       pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
       tags: [['d', tagName(name)]],
     });
-    void event.publish();
+    void event.publish().catch((err: unknown) => {
+      warn('Could not publish lastHandled %O', err);
+    });
   }
 }
 
