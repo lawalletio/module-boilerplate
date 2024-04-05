@@ -97,10 +97,10 @@ export class Module<Context extends DefaultContext = DefaultContext> {
       throw new Error('Error setting up subscriptions');
     }
 
+    log('Subscribing...');
+    subscribeToAll<Context>(this.context, this.#readNDK, allHandlers);
     this.#readNDK.pool.on('relay:connect', (relay: NDKRelay): void => {
       log('Connected to Read Relay %s', relay.url);
-      log('Subscribing...');
-      subscribeToAll<Context>(this.context, this.#readNDK, allHandlers);
     });
 
     this.#readNDK.pool.on('relay:disconnect', (relay: NDKRelay) => {
