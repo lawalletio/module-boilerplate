@@ -9,21 +9,21 @@ const error: Debugger = log.extend('warn');
 export class DirectOutbox implements Outbox {
   constructor(private readonly ndk: NDK) {}
 
-  publish(event: NostrEvent, relaySet?: NDKRelaySet): Promise<void> {
-    const ndkEvent = new NDKEvent(this.ndk, event);
+  publish(evento: NostrEvent, relaySet?: NDKRelaySet): Promise<void> {
+    const ndkEvent = new NDKEvent(this.ndk, evento);
     return new Promise((resolve, reject) => {
       ndkEvent
         .publish(relaySet)
         .then((relays) => {
           if (0 === relays.size) {
-            error('Could not publish to any relay event %s', event.id);
+            error('Could not publish to any relay event %s', evento.id);
             reject(new Error('Did not publish to any relay'));
           } else {
             resolve();
           }
         })
         .catch((e: unknown) => {
-          error('Error found when publishing event %s: %O', event.id, e);
+          error('Error found when publishing event %s: %O', evento.id, e);
           reject(new Error('Unexpected error publishing event'));
         });
     });
